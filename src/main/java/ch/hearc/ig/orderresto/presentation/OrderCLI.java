@@ -5,14 +5,19 @@ import ch.hearc.ig.orderresto.business.Order;
 import ch.hearc.ig.orderresto.business.Product;
 import ch.hearc.ig.orderresto.business.Restaurant;
 import ch.hearc.ig.orderresto.persistence.FakeDb;
+import ch.hearc.ig.orderresto.persistence.RestaurantMapper;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class OrderCLI extends AbstractCLI {
+    private RestaurantMapper restaurantMapper;
+
+    public OrderCLI(RestaurantMapper restaurantMapper) {
+        this.restaurantMapper = restaurantMapper;
+    }
 
     public Order createNewOrder() {
-
         this.ln("======================================================");
         Restaurant restaurant = (new RestaurantCLI()).getExistingRestaurant();
 
@@ -25,7 +30,7 @@ public class OrderCLI extends AbstractCLI {
 
         int userChoice = this.readIntFromUser(2);
         if (userChoice == 0) {
-            (new MainCLI()).run();
+            (new MainCLI(restaurantMapper)).run();
             return null;
         }
         CustomerCLI customerCLI = new CustomerCLI();
@@ -37,13 +42,9 @@ public class OrderCLI extends AbstractCLI {
             FakeDb.addCustomer(customer);
         }
 
-        // Possible improvements:
-        // - ask whether it's a takeAway order or not?
-        // - Ask user for multiple products?
         Order order = new Order(null, customer, restaurant, false, LocalDateTime.now());
         order.addProduct(product);
 
-        // Actually place the order (this could/should be in a different method?)
         product.addOrder(order);
         restaurant.addOrder(order);
         customer.addOrder(order);
@@ -55,6 +56,11 @@ public class OrderCLI extends AbstractCLI {
 
     public Order selectOrder() {
         Customer customer = (new CustomerCLI()).getExistingCustomer();
+
+        if (customer == null) {
+            this.ln(String.format("Désolé, il n'y a aucun client avec cet email"));
+            return null;
+        }
         Object[] orders = customer.getOrders().toArray();
         if (orders.length == 0) {
             this.ln(String.format("Désolé, il n'y a aucune commande pour %s", customer.getEmail()));
