@@ -56,7 +56,7 @@ public class OrderCLI extends AbstractCLI {
     }
 
     public Order selectOrder() {
-        Customer customer = (new CustomerCLI()).getExistingCustomer();
+        Customer customer = (new CustomerCLI(restaurantMapper)).getExistingCustomer();
 
         if (customer == null) {
             this.ln(String.format("Désolé, il n'y a aucun client avec cet email"));
