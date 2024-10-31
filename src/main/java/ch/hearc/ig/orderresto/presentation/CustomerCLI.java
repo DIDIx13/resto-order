@@ -17,7 +17,7 @@ public class CustomerCLI extends AbstractCLI {
     public Customer getExistingCustomer() {
         this.ln("Quelle est votre addresse email?");
         String email = this.readEmailFromUser();
-        return restaurantMapper.getCustomerByEmail(email);
+        return restaurantMapper.findCustomerByEmail(email);
     }
 
     public Customer createNewCustomer() {
