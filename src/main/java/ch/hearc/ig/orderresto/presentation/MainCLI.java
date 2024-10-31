@@ -1,9 +1,16 @@
 package ch.hearc.ig.orderresto.presentation;
 
 import ch.hearc.ig.orderresto.business.Order;
-import ch.hearc.ig.orderresto.persistence.FakeDb;
+// import ch.hearc.ig.orderresto.persistence.FakeDb;
+import ch.hearc.ig.orderresto.persistence.RestaurantMapper;
 
 public class MainCLI extends AbstractCLI {
+    private RestaurantMapper restaurantMapper;
+
+    public MainCLI(RestaurantMapper restaurantMapper) {
+        this.restaurantMapper = restaurantMapper;
+    }
+
     public void run() {
         this.ln("======================================================");
         this.ln("Que voulez-vous faire ?");
@@ -19,10 +26,10 @@ public class MainCLI extends AbstractCLI {
             this.ln("Good bye!");
             return;
         }
-        OrderCLI orderCLI = new OrderCLI();
+        OrderCLI orderCLI = new OrderCLI(restaurantMapper);
         if (userChoice == 1) {
             Order newOrder = orderCLI.createNewOrder();
-            FakeDb.getOrders().add(newOrder);
+            restaurantMapper.addOrder(newOrder);
         } else {
             Order existingOrder = orderCLI.selectOrder();
             if (existingOrder != null) {
