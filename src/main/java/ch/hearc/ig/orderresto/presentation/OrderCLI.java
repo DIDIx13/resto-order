@@ -19,7 +19,7 @@ public class OrderCLI extends AbstractCLI {
 
     public Order createNewOrder() {
         this.ln("======================================================");
-        Restaurant restaurant = (new RestaurantCLI()).getExistingRestaurant();
+        Restaurant restaurant = (new RestaurantCLI(restaurantMapper)).getExistingRestaurant();
 
         Product product = (new ProductCLI()).getRestaurantProduct(restaurant);
 
@@ -34,7 +34,7 @@ public class OrderCLI extends AbstractCLI {
             return null;
         }
 
-        CustomerCLI customerCLI = new CustomerCLI();
+        CustomerCLI customerCLI = new CustomerCLI(restaurantMapper);
         Customer customer = null;
         if (userChoice == 1) {
             customer = customerCLI.getExistingCustomer();
