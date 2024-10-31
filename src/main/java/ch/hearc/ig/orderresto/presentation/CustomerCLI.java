@@ -4,17 +4,20 @@ import ch.hearc.ig.orderresto.business.Address;
 import ch.hearc.ig.orderresto.business.Customer;
 import ch.hearc.ig.orderresto.business.OrganizationCustomer;
 import ch.hearc.ig.orderresto.business.PrivateCustomer;
-import ch.hearc.ig.orderresto.persistence.FakeDb;
+import ch.hearc.ig.orderresto.persistence.RestaurantMapper;
+// import ch.hearc.ig.orderresto.persistence.FakeDb;
 
 public class CustomerCLI extends AbstractCLI {
+    private RestaurantMapper restaurantMapper;
+
+    public CustomerCLI(RestaurantMapper restaurantMapper) {
+        this.restaurantMapper = restaurantMapper;
+    }
 
     public Customer getExistingCustomer() {
         this.ln("Quelle est votre addresse email?");
         String email = this.readEmailFromUser();
-        return FakeDb.getCustomers().stream()
-                .filter(c -> c.getEmail().equals(email))
-                .findFirst()
-                .orElse(null);
+        return restaurantMapper.getCustomerByEmail(email);
     }
 
     public Customer createNewCustomer() {

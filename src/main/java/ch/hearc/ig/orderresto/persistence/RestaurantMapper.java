@@ -14,5 +14,5 @@ public interface RestaurantMapper {
 
     void addOrder(Order order);
     void addCustomer(Customer customer);
-
+    Customer findCustomerByEmail(String email);
 }

@@ -49,4 +49,12 @@ public class RestaurantMapperImpl implements RestaurantMapper {
     public void addCustomer(Customer customer) {
         customers.add(customer);
     }
+
+    @Override
+    public Customer findCustomerByEmail(String email) {
+        return customers.stream()
+                .filter(customer -> customer.getEmail().equals(email))
+                .findFirst()
+                .orElse(null);
+    }
 }
