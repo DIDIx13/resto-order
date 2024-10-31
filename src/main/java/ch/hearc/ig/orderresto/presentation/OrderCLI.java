@@ -4,7 +4,7 @@ import ch.hearc.ig.orderresto.business.Customer;
 import ch.hearc.ig.orderresto.business.Order;
 import ch.hearc.ig.orderresto.business.Product;
 import ch.hearc.ig.orderresto.business.Restaurant;
-import ch.hearc.ig.orderresto.persistence.FakeDb;
+// import ch.hearc.ig.orderresto.persistence.FakeDb;
 import ch.hearc.ig.orderresto.persistence.RestaurantMapper;
 
 import java.time.LocalDateTime;
@@ -33,13 +33,14 @@ public class OrderCLI extends AbstractCLI {
             (new MainCLI(restaurantMapper)).run();
             return null;
         }
+
         CustomerCLI customerCLI = new CustomerCLI();
         Customer customer = null;
         if (userChoice == 1) {
             customer = customerCLI.getExistingCustomer();
         } else {
             customer = customerCLI.createNewCustomer();
-            FakeDb.addCustomer(customer);
+            restaurantMapper.addCustomer(customer);
         }
 
         Order order = new Order(null, customer, restaurant, false, LocalDateTime.now());
