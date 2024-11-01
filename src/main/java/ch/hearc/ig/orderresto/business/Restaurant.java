@@ -39,6 +39,10 @@ public class Restaurant {
         return productsCatalog;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public void registerProduct(Product p) {
         if (p.getRestaurant() != this) {
             throw new RuntimeException("Restaurant mismatch!");

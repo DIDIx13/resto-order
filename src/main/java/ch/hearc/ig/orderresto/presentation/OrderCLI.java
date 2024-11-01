@@ -6,28 +6,49 @@ import ch.hearc.ig.orderresto.business.Product;
 import ch.hearc.ig.orderresto.business.Restaurant;
 // import ch.hearc.ig.orderresto.persistence.FakeDb;
 import ch.hearc.ig.orderresto.persistence.RestaurantMapper;
+import ch.hearc.ig.orderresto.persistence.ProductMapper;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Set;
 
 public class OrderCLI extends AbstractCLI {
     private RestaurantMapper restaurantMapper;
+    private ProductMapper productMapper;
 
-    public OrderCLI(RestaurantMapper restaurantMapper) {
+    public OrderCLI(RestaurantMapper restaurantMapper, ProductMapper productMapper) {
         this.restaurantMapper = restaurantMapper;
+        this.productMapper = productMapper;
     }
 
     public Order createNewOrder() {
         this.ln("======================================================");
         Restaurant restaurant = (new RestaurantCLI(restaurantMapper)).getExistingRestaurant();
 
-        Product product = (new ProductCLI()).getRestaurantProduct(restaurant);
+        // Recupera i prodotti del ristorante selezionato
+        Set<Product> products = productMapper.findProductsByRestaurantId(restaurant.getId());
+
+        if (products.isEmpty()) {
+            this.ln("Il ristorante selezionato non ha prodotti disponibili.");
+            return null;
+        }
+
+        this.ln("Prodotti disponibili presso " + restaurant.getName() + ":");
+        Object[] productsArray = products.toArray();  // Converte Set<Product> in un array per l'accesso tramite indice
+        for (int i = 0; i < productsArray.length; i++) {
+            this.ln((i + 1) + ". " + productsArray[i].toString());
+        }
+
+        this.ln("Bienvenue chez " + restaurant.getName() + ". Choisissez un de nos produits:");
+        int productChoice = this.readIntFromUser(1, productsArray.length);  // Consente di scegliere tra i prodotti elencati
+
+        // Recupera il prodotto scelto dall'array
+        Product selectedProduct = (Product) productsArray[productChoice - 1];
 
         this.ln("======================================================");
         this.ln("0. Annuler");
         this.ln("1. Je suis un client existant");
         this.ln("2. Je suis un nouveau client");
-
         int userChoice = this.readIntFromUser(2);
         if (userChoice == 0) {
             (new MainCLI(restaurantMapper)).run();
@@ -44,14 +65,11 @@ public class OrderCLI extends AbstractCLI {
         }
 
         Order order = new Order(null, customer, restaurant, false, LocalDateTime.now());
-        order.addProduct(product);
-
-        product.addOrder(order);
-        restaurant.addOrder(order);
-        customer.addOrder(order);
-
+        order.addProduct(selectedProduct); // Assicurati di aggiungere il prodotto all'ordine
+        selectedProduct.addOrder(order); // Associa il prodotto all'ordine
+        restaurant.addOrder(order); // Associa l'ordine al ristorante
+        customer.addOrder(order); // Associa l'ordine al cliente
         this.ln("Merci pour votre commande!");
-
         return order;
     }
 
