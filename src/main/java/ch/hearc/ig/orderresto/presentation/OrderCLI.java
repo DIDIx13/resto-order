@@ -4,9 +4,10 @@ import ch.hearc.ig.orderresto.business.Customer;
 import ch.hearc.ig.orderresto.business.Order;
 import ch.hearc.ig.orderresto.business.Product;
 import ch.hearc.ig.orderresto.business.Restaurant;
-// import ch.hearc.ig.orderresto.persistence.FakeDb;
-import ch.hearc.ig.orderresto.persistence.RestaurantMapper;
+import ch.hearc.ig.orderresto.persistence.OrderMapper;
+import ch.hearc.ig.orderresto.persistence.CustomerMapper;
 import ch.hearc.ig.orderresto.persistence.ProductMapper;
+import ch.hearc.ig.orderresto.persistence.RestaurantMapper;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -14,13 +15,18 @@ import java.util.Set;
 
 public class OrderCLI extends AbstractCLI {
     private RestaurantMapper restaurantMapper;
+    private CustomerMapper customerMapper;
     private ProductMapper productMapper;
+    private OrderMapper orderMapper;
 
-    public OrderCLI(RestaurantMapper restaurantMapper, ProductMapper productMapper) {
+    public OrderCLI(RestaurantMapper restaurantMapper, CustomerMapper customerMapper, ProductMapper productMapper, OrderMapper orderMapper) {
         this.restaurantMapper = restaurantMapper;
+        this.customerMapper = customerMapper;
         this.productMapper = productMapper;
+        this.orderMapper = orderMapper;
     }
 
+    // Metodo per creare una nuova comanda e salvarla nel database
     public Order createNewOrder() {
         this.ln("======================================================");
         Restaurant restaurant = (new RestaurantCLI(restaurantMapper)).getExistingRestaurant();
@@ -34,15 +40,13 @@ public class OrderCLI extends AbstractCLI {
         }
 
         this.ln("Prodotti disponibili presso " + restaurant.getName() + ":");
-        Object[] productsArray = products.toArray();  // Converte Set<Product> in un array per l'accesso tramite indice
+        Object[] productsArray = products.toArray();
         for (int i = 0; i < productsArray.length; i++) {
             this.ln((i + 1) + ". " + productsArray[i].toString());
         }
 
-        this.ln("Bienvenue chez " + restaurant.getName() + ". Choisissez un de nos produits:");
-        int productChoice = this.readIntFromUser(1, productsArray.length);  // Consente di scegliere tra i prodotti elencati
-
-        // Recupera il prodotto scelto dall'array
+        this.ln("Choisissez un produit par son numéro:");
+        int productChoice = this.readIntFromUser(1, productsArray.length);
         Product selectedProduct = (Product) productsArray[productChoice - 1];
 
         this.ln("======================================================");
@@ -50,60 +54,79 @@ public class OrderCLI extends AbstractCLI {
         this.ln("1. Je suis un client existant");
         this.ln("2. Je suis un nouveau client");
         int userChoice = this.readIntFromUser(2);
+
         if (userChoice == 0) {
-            (new MainCLI(restaurantMapper)).run();
+            this.ln("Commande annulée.");
             return null;
         }
 
-        CustomerCLI customerCLI = new CustomerCLI(restaurantMapper);
-        Customer customer = null;
+        CustomerCLI customerCLI = new CustomerCLI(customerMapper);
+        Customer customer;
         if (userChoice == 1) {
             customer = customerCLI.getExistingCustomer();
         } else {
             customer = customerCLI.createNewCustomer();
-            restaurantMapper.addCustomer(customer);
         }
 
-        Order order = new Order(null, customer, restaurant, false, LocalDateTime.now());
-        order.addProduct(selectedProduct); // Assicurati di aggiungere il prodotto all'ordine
-        selectedProduct.addOrder(order); // Associa il prodotto all'ordine
-        restaurant.addOrder(order); // Associa l'ordine al ristorante
-        customer.addOrder(order); // Associa l'ordine al cliente
-        this.ln("Merci pour votre commande!");
+        if (customer == null) {
+            this.ln("Client introuvable ou création annulée.");
+            return null;
+        }
+
+        this.ln("Commande à emporter ? (O/N)");
+        String takeAwayChoice = this.readChoicesFromUser(new String[]{"O", "N"});
+        boolean takeAway = "O".equalsIgnoreCase(takeAwayChoice);
+
+        // Creazione dell'ordine e salvataggio nel database
+        Order order = new Order(null, customer, restaurant, takeAway, LocalDateTime.now());
+        order.addProduct(selectedProduct);
+        orderMapper.addOrder(order);
+
+        this.ln("Commande ajoutée avec succès!");
         return order;
     }
 
+    // Metodo per selezionare una comanda esistente associata a un cliente
     public Order selectOrder() {
-        Customer customer = (new CustomerCLI(restaurantMapper)).getExistingCustomer();
-
+        Customer customer = (new CustomerCLI(customerMapper)).getExistingCustomer();
         if (customer == null) {
-            this.ln(String.format("Désolé, il n'y a aucun client avec cet email"));
+            this.ln("Désolé, il n'y a aucun client avec cet email.");
             return null;
         }
-        Object[] orders = customer.getOrders().toArray();
-        if (orders.length == 0) {
+
+        Set<Order> orders = orderMapper.findOrdersByCustomerId(customer.getId());
+        if (orders.isEmpty()) {
             this.ln(String.format("Désolé, il n'y a aucune commande pour %s", customer.getEmail()));
             return null;
         }
+
+        Object[] ordersArray = orders.toArray();
         this.ln("Choisissez une commande:");
-        for (int i = 0 ; i < orders.length ; i++) {
-            Order order = (Order) orders[i];
+        for (int i = 0; i < ordersArray.length; i++) {
+            Order order = (Order) ordersArray[i];
             LocalDateTime when = order.getWhen();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy à hh:mm");
-            this.ln(String.format("%d. %.2f, le %s chez %s.", i, order.getTotalAmount(), when.format(formatter), order.getRestaurant().getName()));
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy à HH:mm");
+            this.ln(String.format("%d. %.2f, le %s chez %s.", i + 1, order.getTotalAmount(), when.format(formatter), order.getRestaurant().getName()));
         }
-        int index = this.readIntFromUser(orders.length - 1);
-        return (Order) orders[index];
+
+        int index = this.readIntFromUser(1, ordersArray.length);
+        return (Order) ordersArray[index - 1];
     }
 
+    // Metodo per visualizzare i dettagli di una comanda selezionata
     public void displayOrder(Order order) {
+        if (order == null) {
+            this.ln("Commande non trouvée.");
+            return;
+        }
+
         LocalDateTime when = order.getWhen();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy à hh:mm");
-        this.ln(String.format("Commande %.2f, le %s chez %s.:", order.getTotalAmount(), when.format(formatter), order.getRestaurant().getName()));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy à HH:mm");
+        this.ln(String.format("Commande de %.2f, le %s chez %s:", order.getTotalAmount(), when.format(formatter), order.getRestaurant().getName()));
+
         int index = 1;
-        for (Product product: order.getProducts()) {
-            this.ln(String.format("%d. %s", index, product));
-            index++;
+        for (Product product : order.getProducts()) {
+            this.ln(String.format("%d. %s", index++, product));
         }
     }
 }

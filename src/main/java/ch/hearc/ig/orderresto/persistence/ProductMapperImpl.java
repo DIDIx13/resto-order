@@ -118,4 +118,29 @@ public class ProductMapperImpl implements ProductMapper {
         }
         return products;
     }
+
+    public Set<Product> findProductsByOrderId(Long orderId) {
+        Set<Product> products = new HashSet<>();
+        String sql = "SELECT p.* FROM PRODUIT p JOIN PRODUIT_COMMANDE pc ON p.numero = pc.fk_produit WHERE pc.fk_commande = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setLong(1, orderId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Product product = new Product(
+                            rs.getLong("numero"),
+                            rs.getString("nom"),
+                            rs.getBigDecimal("prix_unitaire"),
+                            rs.getString("description"),
+                            null
+                    );
+                    products.add(product);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return products;
+    }
 }

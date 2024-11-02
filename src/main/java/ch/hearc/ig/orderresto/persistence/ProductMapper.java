@@ -9,4 +9,5 @@ public interface ProductMapper {
     void updateProduct(Product product);
     Product findProductById(Long id);
     Set<Product> findProductsByRestaurantId(Long restaurantId);
+    Set<Product> findProductsByOrderId(Long orderId);
 }
