@@ -1,6 +1,7 @@
 package ch.hearc.ig.orderresto.persistence;
 
 import ch.hearc.ig.orderresto.business.Product;
+import ch.hearc.ig.orderresto.business.Restaurant;
 import ch.hearc.ig.orderresto.persistence.config.DatabaseManager;
 
 import java.sql.*;
@@ -96,20 +97,31 @@ public class ProductMapperImpl implements ProductMapper {
     @Override
     public Set<Product> findProductsByRestaurantId(Long restaurantId) {
         Set<Product> products = new HashSet<>();
-        String sql = "SELECT * FROM PRODUIT WHERE fk_resto = ?";
+        String sql = "SELECT p.*, r.nom AS restaurant_name, r.numero AS restaurant_id " +
+                "FROM PRODUIT p " +
+                "JOIN RESTAURANT r ON p.fk_resto = r.numero " +
+                "WHERE r.numero = ?";
+
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setLong(1, restaurantId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
+                    Restaurant restaurant = new Restaurant(
+                            rs.getLong("restaurant_id"),
+                            rs.getString("restaurant_name"),
+                            null // Puoi aggiungere l'indirizzo se necessario
+                    );
+
                     Product product = new Product(
                             rs.getLong("numero"),
                             rs.getString("nom"),
                             rs.getBigDecimal("prix_unitaire"),
                             rs.getString("description"),
-                            null // Imposta a null il parametro restaurant
+                            restaurant // Associa il ristorante al prodotto
                     );
+
                     products.add(product);
                 }
             }
@@ -121,21 +133,35 @@ public class ProductMapperImpl implements ProductMapper {
 
     public Set<Product> findProductsByOrderId(Long orderId) {
         Set<Product> products = new HashSet<>();
-        String sql = "SELECT p.* FROM PRODUIT p JOIN PRODUIT_COMMANDE pc ON p.numero = pc.fk_produit WHERE pc.fk_commande = ?";
+        String sql = "SELECT p.*, r.nom AS restaurant_name, r.numero AS restaurant_id " +
+                "FROM PRODUIT p " +
+                "JOIN PRODUIT_COMMANDE pc ON p.numero = pc.fk_produit " +
+                "JOIN RESTAURANT r ON p.fk_resto = r.numero " +
+                "WHERE pc.fk_commande = ?";
+
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setLong(1, orderId);
+            pstmt.setLong(1, orderId); // Imposta l'ID dell'ordine
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
+                    // Crea l'oggetto Restaurant per ogni prodotto
+                    Restaurant restaurant = new Restaurant(
+                            rs.getLong("restaurant_id"),
+                            rs.getString("restaurant_name"),
+                            null // Aggiungi altri dettagli dell'indirizzo se necessario
+                    );
+
+                    // Crea l'oggetto Product
                     Product product = new Product(
                             rs.getLong("numero"),
                             rs.getString("nom"),
                             rs.getBigDecimal("prix_unitaire"),
                             rs.getString("description"),
-                            null
+                            restaurant
                     );
-                    products.add(product);
+
+                    products.add(product); // Aggiungi il prodotto all'insieme
                 }
             }
         } catch (SQLException e) {
