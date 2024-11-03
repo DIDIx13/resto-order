@@ -26,20 +26,20 @@ public class OrderCLI extends AbstractCLI {
         this.orderMapper = orderMapper;
     }
 
-    // Metodo per creare una nuova comanda e salvarla nel database
+    // Method to create a new command and save it to the database
     public Order createNewOrder() {
         this.ln("======================================================");
         Restaurant restaurant = (new RestaurantCLI(restaurantMapper)).getExistingRestaurant();
 
-        // Recupera i prodotti del ristorante selezionato
+        // Retrieves products from the selected restaurant
         Set<Product> products = productMapper.findProductsByRestaurantId(restaurant.getId());
 
         if (products.isEmpty()) {
-            this.ln("Il ristorante selezionato non ha prodotti disponibili.");
+            this.ln("Le restaurant sélectionné n'a pas de produits disponibles.");
             return null;
         }
 
-        this.ln("Prodotti disponibili presso " + restaurant.getName() + ":");
+        this.ln("Produits disponibles auprès de " + restaurant.getName() + ":");
         Object[] productsArray = products.toArray();
         for (int i = 0; i < productsArray.length; i++) {
             this.ln((i + 1) + ". " + productsArray[i].toString());
@@ -77,7 +77,7 @@ public class OrderCLI extends AbstractCLI {
         String takeAwayChoice = this.readChoicesFromUser(new String[]{"O", "N"});
         boolean takeAway = "O".equalsIgnoreCase(takeAwayChoice);
 
-        // Creazione dell'ordine e salvataggio nel database
+        // Creating the order and saving it to the database
         Order order = new Order(null, customer, restaurant, takeAway, LocalDateTime.now());
         order.addProduct(selectedProduct);
         orderMapper.addOrder(order);
@@ -86,7 +86,7 @@ public class OrderCLI extends AbstractCLI {
         return order;
     }
 
-    // Metodo per selezionare una comanda esistente associata a un cliente
+    // Method for selecting an existing order associated with a client
     public Order selectOrder() {
         Customer customer = (new CustomerCLI(customerMapper)).getExistingCustomer();
         if (customer == null || customer.getId() == null) {
@@ -113,7 +113,7 @@ public class OrderCLI extends AbstractCLI {
         return (Order) ordersArray[index - 1];
     }
 
-    // Metodo per visualizzare i dettagli di una comanda selezionata
+    // Method for displaying the details of a selected command
     public void displayOrder(Order order) {
         if (order == null) {
             this.ln("Commande non trouvée.");

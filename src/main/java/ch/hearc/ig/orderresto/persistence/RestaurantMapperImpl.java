@@ -162,7 +162,7 @@ public class RestaurantMapperImpl implements RestaurantMapper {
                             rs.getString("nom"),
                             rs.getBigDecimal("prix_unitaire"),
                             rs.getString("description"),
-                            null // il ristorante sarà aggiunto successivamente
+                            null // the restaurant will be added later
                     );
                     products.add(product);
                 }

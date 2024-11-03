@@ -8,7 +8,7 @@ import java.sql.Statement;
 public class DatabaseManager {
 
     public static Connection getConnection() throws SQLException {
-        return DatabaseConfig.getConnection(); // Usa il metodo da DatabaseConfig
+        return DatabaseConfig.getConnection(); // Use the method from DatabaseConfig
     }
 
     public static void closeConnection(Connection conn) {

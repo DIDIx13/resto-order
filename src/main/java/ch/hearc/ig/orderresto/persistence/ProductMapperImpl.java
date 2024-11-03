@@ -23,14 +23,14 @@ public class ProductMapperImpl implements ProductMapper {
 
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows == 0) {
-                throw new SQLException("Failed to add product, no rows affected.");
+                throw new SQLException("L'ajout d'un produit a échoué, aucune ligne n'est affectée.");
             }
 
             try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     product.setId(generatedKeys.getLong(1));
                 } else {
-                    throw new SQLException("Failed to add product, no ID obtained.");
+                    throw new SQLException("Échec de l'ajout d'un produit, pas d'identification obtenue.");
                 }
             }
         } catch (SQLException e) {
@@ -84,7 +84,7 @@ public class ProductMapperImpl implements ProductMapper {
                             rs.getString("nom"),
                             rs.getBigDecimal("prix_unitaire"),
                             rs.getString("description"),
-                            null // Relazione con il ristorante (opzionale)
+                            null // Relationship with the restaurant (optional)
                     );
                 }
             }
@@ -111,7 +111,7 @@ public class ProductMapperImpl implements ProductMapper {
                     Restaurant restaurant = new Restaurant(
                             rs.getLong("restaurant_id"),
                             rs.getString("restaurant_name"),
-                            null // Puoi aggiungere l'indirizzo se necessario
+                            null // You can add the address if necessary
                     );
 
                     Product product = new Product(
@@ -119,7 +119,7 @@ public class ProductMapperImpl implements ProductMapper {
                             rs.getString("nom"),
                             rs.getBigDecimal("prix_unitaire"),
                             rs.getString("description"),
-                            restaurant // Associa il ristorante al prodotto
+                            restaurant // Associate the restaurant with the product
                     );
 
                     products.add(product);
@@ -142,17 +142,17 @@ public class ProductMapperImpl implements ProductMapper {
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setLong(1, orderId); // Imposta l'ID dell'ordine
+            pstmt.setLong(1, orderId); // Set the order ID
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    // Crea l'oggetto Restaurant per ogni prodotto
+                    // Create the Restaurant object for each product
                     Restaurant restaurant = new Restaurant(
                             rs.getLong("restaurant_id"),
                             rs.getString("restaurant_name"),
-                            null // Aggiungi altri dettagli dell'indirizzo se necessario
+                            null // Add more address details if needed
                     );
 
-                    // Crea l'oggetto Product
+                    // Creates the Product object
                     Product product = new Product(
                             rs.getLong("numero"),
                             rs.getString("nom"),
@@ -161,7 +161,7 @@ public class ProductMapperImpl implements ProductMapper {
                             restaurant
                     );
 
-                    products.add(product); // Aggiungi il prodotto all'insieme
+                    products.add(product); // Add the product to the set
                 }
             }
         } catch (SQLException e) {

@@ -52,7 +52,7 @@ public class Product {
                 "%s - %.2f de chez %s: %s",
                 this.name,
                 this.unitPrice,
-                (this.restaurant != null ? this.restaurant.getName() : "N/A"), // Gestisce il caso di null per il ristorante
+                (this.restaurant != null ? this.restaurant.getName() : "N/A"), // Handles the null case for the restaurant
                 this.description != null ? this.description : "Pas de description"
         );
     }

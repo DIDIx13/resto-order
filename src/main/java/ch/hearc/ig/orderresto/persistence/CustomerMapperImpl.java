@@ -43,7 +43,7 @@ public class CustomerMapperImpl implements CustomerMapper {
 
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows == 0) {
-                throw new SQLException("Failed to add customer, no rows affected.");
+                throw new SQLException("L'ajout d'un client a échoué, aucune ligne n'a été affectée.");
             }
 
             String selectIdSql = "SELECT SEQ_CLIENT.CURRVAL FROM dual";
@@ -52,7 +52,7 @@ public class CustomerMapperImpl implements CustomerMapper {
                 if (rs.next()) {
                     customer.setId(rs.getLong(1));
                 } else {
-                    throw new SQLException("Failed to retrieve customer ID.");
+                    throw new SQLException("Échec de la récupération de l'identifiant du client.");
                 }
             }
         } catch (SQLException e) {
@@ -131,7 +131,6 @@ public class CustomerMapperImpl implements CustomerMapper {
     @Override
     public Customer findCustomerByEmail(String email) {
         String sql = "SELECT * FROM CLIENT WHERE UPPER(email) = UPPER(?)";
-        System.out.println("Email ricercata: " + email);
         try (Connection conn = DatabaseManager.getConnection()) {
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, email.toUpperCase());
@@ -139,7 +138,7 @@ public class CustomerMapperImpl implements CustomerMapper {
                 if (rs.next()) {
                     Customer customer = mapToCustomer(rs);
                     if (customer.getId() == null) {
-                        throw new SQLException("Customer ID is null after retrieval.");
+                        throw new SQLException("L'identifiant du client est nul après l'extraction.");
                     }
                     return customer;
                 }
@@ -168,7 +167,7 @@ public class CustomerMapperImpl implements CustomerMapper {
     }
 
     private Customer mapToCustomer(ResultSet rs) throws SQLException {
-        Long id = rs.getLong("numero"); // Recupera correttamente l'ID del cliente
+        Long id = rs.getLong("numero"); // Correctly retrieves the client's ID
         Address address = new Address(
                 rs.getString("pays"),
                 rs.getString("code_postal"),
@@ -179,7 +178,7 @@ public class CustomerMapperImpl implements CustomerMapper {
 
         if ("P".equals(rs.getString("type"))) {
             return new PrivateCustomer(
-                    id, // Imposta l'ID del cliente qui
+                    id,
                     rs.getString("telephone"),
                     rs.getString("email"),
                     address,
@@ -189,7 +188,7 @@ public class CustomerMapperImpl implements CustomerMapper {
             );
         } else {
             return new OrganizationCustomer(
-                    id, // Imposta l'ID del cliente qui
+                    id,
                     rs.getString("telephone"),
                     rs.getString("email"),
                     address,

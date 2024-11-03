@@ -13,7 +13,7 @@ public class Main {
   public static void main(String[] args) {
     try (Connection conn = DatabaseConfig.getConnection()) {
       if (conn != null) {
-        System.out.println("Connessione al database avvenuta con successo!");
+        System.out.println("Connexion à la base de données réussie !");
       }
     } catch (SQLException e) {
       e.printStackTrace();

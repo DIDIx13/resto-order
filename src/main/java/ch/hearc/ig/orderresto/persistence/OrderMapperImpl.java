@@ -16,26 +16,26 @@ public class OrderMapperImpl implements OrderMapper {
 
     @Override
     public void addOrder(Order order) {
-        String sqlGetOrderId = "SELECT SEQ_COMMANDE.NEXTVAL FROM DUAL"; // Ottiene un nuovo ID dall'oggetto sequenza
+        String sqlGetOrderId = "SELECT SEQ_COMMANDE.NEXTVAL FROM DUAL"; // Gets a new ID from the sequence object
         String sqlOrder = "INSERT INTO COMMANDE (numero, fk_client, fk_resto, a_emporter, quand) VALUES (?, ?, ?, ?, ?)";
         String sqlProductOrder = "INSERT INTO PRODUIT_COMMANDE (fk_commande, fk_produit) VALUES (?, ?)";
 
         try (Connection conn = DatabaseManager.getConnection()) {
-            conn.setAutoCommit(false); // Avvia una transazione
+            conn.setAutoCommit(false); // Start a transaction
 
-            // Ottieni un nuovo ID per l'ordine dalla sequenza
+            // Get a new order ID from the sequence
             try (PreparedStatement pstmtGetOrderId = conn.prepareStatement(sqlGetOrderId);
                  ResultSet rs = pstmtGetOrderId.executeQuery()) {
                 if (rs.next()) {
-                    order.setId(rs.getLong(1)); // Imposta l'ID dell'ordine con il valore della sequenza
+                    order.setId(rs.getLong(1)); // Set the order ID with the value of the sequence
                 } else {
-                    throw new SQLException("Failed to retrieve order ID from sequence.");
+                    throw new SQLException("Échec de l'extraction de l'identifiant de la commande à partir de la séquence.");
                 }
             }
 
-            // Inserimento dell'ordine nella tabella COMMANDE
+            // Order entry in the COMMANDE table.
             try (PreparedStatement pstmtOrder = conn.prepareStatement(sqlOrder)) {
-                pstmtOrder.setLong(1, order.getId()); // Usa l'ID ottenuto dalla sequenza
+                pstmtOrder.setLong(1, order.getId()); // Use the ID obtained from the sequence
                 pstmtOrder.setLong(2, order.getCustomer().getId());
                 pstmtOrder.setLong(3, order.getRestaurant().getId());
                 pstmtOrder.setString(4, order.getTakeAway() ? "O" : "N");
@@ -43,21 +43,21 @@ public class OrderMapperImpl implements OrderMapper {
 
                 int affectedRows = pstmtOrder.executeUpdate();
                 if (affectedRows == 0) {
-                    throw new SQLException("Failed to add order, no rows affected.");
+                    throw new SQLException("Échec de l'ajout d'une commande, aucune ligne affectée.");
                 }
             }
 
-            // Inserimento dei prodotti associati a questo ordine in PRODUIT_COMMANDE
+            // Entering the products associated with this order in PRODUIT_COMMANDE
             try (PreparedStatement pstmtProductOrder = conn.prepareStatement(sqlProductOrder)) {
                 for (Product product : order.getProducts()) {
                     pstmtProductOrder.setLong(1, order.getId()); // fk_commande
                     pstmtProductOrder.setLong(2, product.getId()); // fk_produit
-                    pstmtProductOrder.addBatch(); // Usa il batch per ottimizzare l'inserimento
+                    pstmtProductOrder.addBatch(); // Use batch to optimize input
                 }
-                pstmtProductOrder.executeBatch(); // Esegue il batch per inserire tutte le associazioni
+                pstmtProductOrder.executeBatch(); // Runs batch to insert all associations
             }
 
-            conn.commit(); // Conferma la transazione
+            conn.commit();
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -92,7 +92,7 @@ public class OrderMapperImpl implements OrderMapper {
 
             pstmt.executeUpdate();
 
-            // Rimuovi i vecchi prodotti associati all'ordine e inserisci i nuovi
+            // Remove old products associated with the order and insert new ones
             String deleteOrderProductsSql = "DELETE FROM PRODUIT_COMMANDE WHERE fk_commande = ?";
             try (PreparedStatement deleteStmt = conn.prepareStatement(deleteOrderProductsSql)) {
                 deleteStmt.setLong(1, order.getId());
@@ -148,7 +148,7 @@ public class OrderMapperImpl implements OrderMapper {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return orders;  // Restituisce un insieme vuoto se non ci sono ordini, evitando NullPointerException
+        return orders;  // Returns an empty set if there are no orders, avoiding NullPointerException
     }
 
     @Override
@@ -183,15 +183,15 @@ public class OrderMapperImpl implements OrderMapper {
 
         Order order = new Order(rs.getLong("numero"), customer, restaurant, takeAway, when);
 
-        // Recupera i prodotti associati all'ordine
+        // Retrieve products associated with the order
         Set<Product> products = productMapper.findProductsByOrderId(order.getId());
-        BigDecimal totalAmount = BigDecimal.ZERO;  // Inizializza il totale a zero
+        BigDecimal totalAmount = BigDecimal.ZERO;  // Initialize the total to zero
         for (Product product : products) {
-            order.addProduct(product);  // Aggiunge il prodotto all'ordine
-            totalAmount = totalAmount.add(product.getUnitPrice());  // Somma il prezzo unitario al totale
+            order.addProduct(product);  // Adds the product to the order
+            totalAmount = totalAmount.add(product.getUnitPrice());  // Add the unit price to the total
         }
 
-        order.setTotalAmount(totalAmount);  // Imposta il totale calcolato nell'ordine
+        order.setTotalAmount(totalAmount);  // Set the calculated total in the order
         return order;
     }
 }
