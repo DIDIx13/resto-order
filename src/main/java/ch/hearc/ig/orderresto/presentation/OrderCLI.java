@@ -89,8 +89,8 @@ public class OrderCLI extends AbstractCLI {
     // Metodo per selezionare una comanda esistente associata a un cliente
     public Order selectOrder() {
         Customer customer = (new CustomerCLI(customerMapper)).getExistingCustomer();
-        if (customer == null) {
-            this.ln("Désolé, il n'y a aucun client avec cet email.");
+        if (customer == null || customer.getId() == null) {
+            this.ln("Désolé, le client n'existe pas ou l'ID du client est invalide.");
             return null;
         }
 

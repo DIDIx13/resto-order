@@ -6,6 +6,7 @@ import ch.hearc.ig.orderresto.business.PrivateCustomer;
 import ch.hearc.ig.orderresto.persistence.config.DatabaseManager;
 import ch.hearc.ig.orderresto.business.Address;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,7 +29,7 @@ public class CustomerMapperImpl implements CustomerMapper {
             pstmt.setString(8, customer.getAddress().getCountryCode());
             if (customer instanceof PrivateCustomer) {
                 PrivateCustomer privateCustomer = (PrivateCustomer) customer;
-                pstmt.setString(9, privateCustomer.getGender());
+                pstmt.setString(9, privateCustomer.getGender().equals("H") ? "N" : "O");
                 pstmt.setString(10, privateCustomer.getFirstName());
                 pstmt.setNull(11, Types.VARCHAR);
                 pstmt.setString(12, "P");
@@ -45,11 +46,13 @@ public class CustomerMapperImpl implements CustomerMapper {
                 throw new SQLException("Failed to add customer, no rows affected.");
             }
 
-            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    customer.setId(generatedKeys.getLong(1));
+            String selectIdSql = "SELECT SEQ_CLIENT.CURRVAL FROM dual";
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(selectIdSql)) {
+                if (rs.next()) {
+                    customer.setId(rs.getLong(1));
                 } else {
-                    throw new SQLException("Failed to add customer, no ID obtained.");
+                    throw new SQLException("Failed to retrieve customer ID.");
                 }
             }
         } catch (SQLException e) {
@@ -127,14 +130,18 @@ public class CustomerMapperImpl implements CustomerMapper {
 
     @Override
     public Customer findCustomerByEmail(String email) {
-        String sql = "SELECT * FROM CLIENT WHERE email = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, email);
+        String sql = "SELECT * FROM CLIENT WHERE UPPER(email) = UPPER(?)";
+        System.out.println("Email ricercata: " + email);
+        try (Connection conn = DatabaseManager.getConnection()) {
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, email.toUpperCase());
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    return mapToCustomer(rs);
+                    Customer customer = mapToCustomer(rs);
+                    if (customer.getId() == null) {
+                        throw new SQLException("Customer ID is null after retrieval.");
+                    }
+                    return customer;
                 }
             }
         } catch (SQLException e) {
@@ -161,6 +168,7 @@ public class CustomerMapperImpl implements CustomerMapper {
     }
 
     private Customer mapToCustomer(ResultSet rs) throws SQLException {
+        Long id = rs.getLong("numero"); // Recupera correttamente l'ID del cliente
         Address address = new Address(
                 rs.getString("pays"),
                 rs.getString("code_postal"),
@@ -168,9 +176,10 @@ public class CustomerMapperImpl implements CustomerMapper {
                 rs.getString("rue"),
                 rs.getString("num_rue")
         );
+
         if ("P".equals(rs.getString("type"))) {
             return new PrivateCustomer(
-                    rs.getLong("numero"),
+                    id, // Imposta l'ID del cliente qui
                     rs.getString("telephone"),
                     rs.getString("email"),
                     address,
@@ -180,7 +189,7 @@ public class CustomerMapperImpl implements CustomerMapper {
             );
         } else {
             return new OrganizationCustomer(
-                    rs.getLong("numero"),
+                    id, // Imposta l'ID del cliente qui
                     rs.getString("telephone"),
                     rs.getString("email"),
                     address,

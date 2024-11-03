@@ -6,7 +6,9 @@ import ch.hearc.ig.orderresto.business.Customer;
 import ch.hearc.ig.orderresto.business.Restaurant;
 import ch.hearc.ig.orderresto.persistence.config.DatabaseManager;
 
+import java.math.BigDecimal;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,6 +20,14 @@ public class OrderMapperImpl implements OrderMapper {
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
+            // Controllo preliminare degli ID per prevenire inserimenti non validi
+            if (order.getCustomer().getId() == null) {
+                throw new SQLException("Customer ID is null. Cannot insert order.");
+            }
+            if (order.getRestaurant().getId() == null) {
+                throw new SQLException("Restaurant ID is null. Cannot insert order.");
+            }
+
             pstmt.setLong(1, order.getCustomer().getId());
             pstmt.setLong(2, order.getRestaurant().getId());
             pstmt.setString(3, order.getTakeAway() ? "O" : "N");
@@ -28,25 +38,15 @@ public class OrderMapperImpl implements OrderMapper {
                 throw new SQLException("Failed to add order, no rows affected.");
             }
 
-            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    order.setId(generatedKeys.getLong(1));
+            String selectIdSql = "SELECT SEQ_COMMANDE.CURRVAL FROM dual";
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(selectIdSql)) {
+                if (rs.next()) {
+                    order.setId(rs.getLong(1));
                 } else {
-                    throw new SQLException("Failed to add order, no ID obtained.");
+                    throw new SQLException("Failed to retrieve order ID.");
                 }
             }
-
-            // Aggiungi ogni prodotto associato all'ordine nella tabella PRODUIT_COMMANDE
-            String orderProductSql = "INSERT INTO PRODUIT_COMMANDE (fk_commande, fk_produit) VALUES (?, ?)";
-            try (PreparedStatement orderProductStmt = conn.prepareStatement(orderProductSql)) {
-                for (Product product : order.getProducts()) {
-                    orderProductStmt.setLong(1, order.getId());
-                    orderProductStmt.setLong(2, product.getId());
-                    orderProductStmt.addBatch();
-                }
-                orderProductStmt.executeBatch();
-            }
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -136,7 +136,7 @@ public class OrderMapperImpl implements OrderMapper {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return orders;
+        return orders;  // Restituisce un insieme vuoto se non ci sono ordini, evitando NullPointerException
     }
 
     @Override
@@ -161,19 +161,30 @@ public class OrderMapperImpl implements OrderMapper {
         RestaurantMapper restaurantMapper = new RestaurantMapperImpl();
         ProductMapper productMapper = new ProductMapperImpl();
 
-        Long orderId = rs.getLong("numero");
-        Customer customer = customerMapper.findCustomerById(rs.getLong("fk_client"));
-        Restaurant restaurant = restaurantMapper.findRestaurantById(rs.getLong("fk_resto"));
+        Long customerId = rs.getLong("fk_client");
+        Long restaurantId = rs.getLong("fk_resto");
+
+        Customer customer = customerMapper.findCustomerById(customerId);
+        if (customer == null) {
+            throw new SQLException("Customer with ID " + customerId + " not found.");
+        }
+
+        Restaurant restaurant = restaurantMapper.findRestaurantById(restaurantId);
+        if (restaurant == null) {
+            throw new SQLException("Restaurant with ID " + restaurantId + " not found.");
+        }
+
         Boolean takeAway = "O".equals(rs.getString("a_emporter"));
-        Timestamp whenTimestamp = rs.getTimestamp("quand");
+        LocalDateTime when = rs.getTimestamp("quand").toLocalDateTime();
 
-        Order order = new Order(orderId, customer, restaurant, takeAway, whenTimestamp.toLocalDateTime());
+        Order order = new Order(rs.getLong("numero"), customer, restaurant, takeAway, when);
 
-        // Aggiungi i prodotti associati all'ordine
-        Set<Product> products = productMapper.findProductsByOrderId(orderId);
+        // Recupera e aggiunge i prodotti associati all'ordine
+        Set<Product> products = productMapper.findProductsByOrderId(order.getId());
         for (Product product : products) {
             order.addProduct(product);
         }
+
         return order;
     }
 }

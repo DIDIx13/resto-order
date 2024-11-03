@@ -61,4 +61,8 @@ public class Order {
     public void setId(Long id) {
         this.id = id;
     }
+
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
+    }
 }
