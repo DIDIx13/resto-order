@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class OrderMapperImpl implements OrderMapper {
+    private IdentityMap<Order> identityMap = new IdentityMap<>();
 
     @Override
     public void addOrder(Order order) {
@@ -56,8 +57,8 @@ public class OrderMapperImpl implements OrderMapper {
                 }
                 pstmtProductOrder.executeBatch(); // Runs batch to insert all associations
             }
-
             conn.commit();
+            identityMap.put(order.getId(), order);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -72,6 +73,7 @@ public class OrderMapperImpl implements OrderMapper {
 
             pstmt.setLong(1, order.getId());
             pstmt.executeUpdate();
+            identityMap.put(order.getId(), null);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -109,6 +111,8 @@ public class OrderMapperImpl implements OrderMapper {
                 orderProductStmt.executeBatch();
             }
 
+            identityMap.put(order.getId(), order);
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -116,6 +120,10 @@ public class OrderMapperImpl implements OrderMapper {
 
     @Override
     public Order findOrderById(Long id) {
+        if (identityMap.contains(id)) {
+            return identityMap.get(id);
+        }
+
         String sql = "SELECT * FROM COMMANDE WHERE numero = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -123,6 +131,8 @@ public class OrderMapperImpl implements OrderMapper {
             pstmt.setLong(1, id);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
+                    Order order = mapToOrder(rs);
+                    identityMap.put(id, order);
                     return mapToOrder(rs);
                 }
             }
@@ -142,7 +152,9 @@ public class OrderMapperImpl implements OrderMapper {
             pstmt.setLong(1, customerId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    orders.add(mapToOrder(rs));
+                    Order order = mapToOrder(rs);
+                    orders.add(order);
+                    identityMap.put(order.getId(), order);
                 }
             }
         } catch (SQLException e) {
@@ -160,7 +172,9 @@ public class OrderMapperImpl implements OrderMapper {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                orders.add(mapToOrder(rs));
+                Order order = mapToOrder(rs);
+                orders.add(order);
+                identityMap.put(order.getId(), order);
             }
         } catch (SQLException e) {
             e.printStackTrace();

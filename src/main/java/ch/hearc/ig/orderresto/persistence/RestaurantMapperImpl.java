@@ -11,6 +11,7 @@ public class RestaurantMapperImpl implements RestaurantMapper {
     private Set<Restaurant> restaurants = new HashSet<>();
     private Set<Order> orders = new HashSet<>();
     private Set<Customer> customers = new HashSet<>();
+    private IdentityMap<Restaurant> identityMap = new IdentityMap<>();
 
     @Override
     public void addRestaurant(Restaurant restaurant) {
@@ -30,6 +31,7 @@ public class RestaurantMapperImpl implements RestaurantMapper {
             try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     restaurant.setId(generatedKeys.getLong(1));
+                    identityMap.put(restaurant.getId(), restaurant);
                 }
             }
         } catch (SQLException e) {
@@ -45,6 +47,7 @@ public class RestaurantMapperImpl implements RestaurantMapper {
 
             pstmt.setLong(1, restaurant.getId());
             pstmt.executeUpdate();
+            identityMap.put(restaurant.getId(), null);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -66,6 +69,7 @@ public class RestaurantMapperImpl implements RestaurantMapper {
             pstmt.setLong(7, restaurant.getId());
 
             pstmt.executeUpdate();
+            identityMap.put(restaurant.getId(), restaurant);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -74,6 +78,10 @@ public class RestaurantMapperImpl implements RestaurantMapper {
 
     @Override
     public Restaurant findRestaurantById(Long id) {
+        if (identityMap.contains(id)) {
+            return identityMap.get(id);
+        }
+
         String sql = "SELECT * FROM RESTAURANT WHERE numero = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -88,11 +96,13 @@ public class RestaurantMapperImpl implements RestaurantMapper {
                             rs.getString("rue"),
                             rs.getString("num_rue")
                     );
-                    return new Restaurant(
+                    Restaurant restaurant = new Restaurant(
                             rs.getLong("numero"),
                             rs.getString("nom"),
                             address
                     );
+                    identityMap.put(id, restaurant);
+                    return restaurant;
                 }
             }
         } catch (SQLException e) {
@@ -123,6 +133,7 @@ public class RestaurantMapperImpl implements RestaurantMapper {
                         address
                 );
                 restaurants.add(restaurant);
+                identityMap.put(restaurant.getId(), restaurant);
             }
         } catch (SQLException e) {
             e.printStackTrace();

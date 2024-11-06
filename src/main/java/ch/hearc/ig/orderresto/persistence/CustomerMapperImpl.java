@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class CustomerMapperImpl implements CustomerMapper {
+    private IdentityMap<Customer> identityMap = new IdentityMap<>();
 
     @Override
     public void addCustomer(Customer customer) {
@@ -51,6 +52,7 @@ public class CustomerMapperImpl implements CustomerMapper {
                  ResultSet rs = stmt.executeQuery(selectIdSql)) {
                 if (rs.next()) {
                     customer.setId(rs.getLong(1));
+                    identityMap.put(customer.getId(), customer);
                 } else {
                     throw new SQLException("Échec de la récupération de l'identifiant du client.");
                 }
@@ -68,6 +70,7 @@ public class CustomerMapperImpl implements CustomerMapper {
 
             pstmt.setLong(1, customer.getId());
             pstmt.executeUpdate();
+            identityMap.put(customer.getId(), null);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -104,6 +107,7 @@ public class CustomerMapperImpl implements CustomerMapper {
             pstmt.setLong(13, customer.getId());
 
             pstmt.executeUpdate();
+            identityMap.put(customer.getId(), customer);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -112,6 +116,10 @@ public class CustomerMapperImpl implements CustomerMapper {
 
     @Override
     public Customer findCustomerById(Long id) {
+        if (identityMap.contains(id)) {
+            return identityMap.get(id);
+        }
+
         String sql = "SELECT * FROM CLIENT WHERE numero = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -119,6 +127,8 @@ public class CustomerMapperImpl implements CustomerMapper {
             pstmt.setLong(1, id);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
+                    Customer customer = mapToCustomer(rs);
+                    identityMap.put(id, customer);
                     return mapToCustomer(rs);
                 }
             }
@@ -140,6 +150,7 @@ public class CustomerMapperImpl implements CustomerMapper {
                     if (customer.getId() == null) {
                         throw new SQLException("L'identifiant du client est nul après l'extraction.");
                     }
+                    identityMap.put(customer.getId(), customer);
                     return customer;
                 }
             }
@@ -158,7 +169,9 @@ public class CustomerMapperImpl implements CustomerMapper {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                customers.add(mapToCustomer(rs));
+                Customer customer = mapToCustomer(rs);
+                customers.add(customer);
+                identityMap.put(customer.getId(), customer);
             }
         } catch (SQLException e) {
             e.printStackTrace();
