@@ -8,10 +8,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class RestaurantMapperImpl implements RestaurantMapper {
-    private Set<Restaurant> restaurants = new HashSet<>();
-    private Set<Order> orders = new HashSet<>();
-    private Set<Customer> customers = new HashSet<>();
     private IdentityMap<Restaurant> identityMap = new IdentityMap<>();
+    private OrderMapper orderMapper = new OrderMapperImpl();
+    private CustomerMapper customerMapper = new CustomerMapperImpl();
+    private ProductMapper productMapper = new ProductMapperImpl();
 
     @Override
     public void addRestaurant(Restaurant restaurant) {
@@ -143,44 +143,20 @@ public class RestaurantMapperImpl implements RestaurantMapper {
 
     @Override
     public void addOrder(Order order) {
-        orders.add(order);
+        orderMapper.addOrder(order);
     }
 
     @Override
     public void addCustomer(Customer customer) {
-        customers.add(customer);
+        customerMapper.addCustomer(customer);
     }
 
     @Override
     public Customer findCustomerByEmail(String email) {
-        return customers.stream()
-                .filter(customer -> customer.getEmail().equals(email))
-                .findFirst()
-                .orElse(null);
+        return customerMapper.findCustomerByEmail(email);
     }
 
     public Set<Product> findProductsByRestaurantId(Long restaurantId) {
-        Set<Product> products = new HashSet<>();
-        String sql = "SELECT * FROM PRODUIT WHERE fk_resto = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setLong(1, restaurantId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    Product product = new Product(
-                            rs.getLong("numero"),
-                            rs.getString("nom"),
-                            rs.getBigDecimal("prix_unitaire"),
-                            rs.getString("description"),
-                            null // the restaurant will be added later
-                    );
-                    products.add(product);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return products;
+        return productMapper.findProductsByRestaurantId(restaurantId);
     }
 }
