@@ -17,6 +17,10 @@ public class OrderMapperImpl implements OrderMapper {
 
     @Override
     public void addOrder(Order order) {
+        if (identityMap.contains(order.getId())) {
+            return;
+        }
+
         String sqlGetOrderId = "SELECT SEQ_COMMANDE.NEXTVAL FROM DUAL"; // Gets a new ID from the sequence object
         String sqlOrder = "INSERT INTO COMMANDE (numero, fk_client, fk_resto, a_emporter, quand) VALUES (?, ?, ?, ?, ?)";
         String sqlProductOrder = "INSERT INTO PRODUIT_COMMANDE (fk_commande, fk_produit) VALUES (?, ?)";
@@ -133,7 +137,7 @@ public class OrderMapperImpl implements OrderMapper {
                 if (rs.next()) {
                     Order order = mapToOrder(rs);
                     identityMap.put(id, order);
-                    return mapToOrder(rs);
+                    return order;
                 }
             }
         } catch (SQLException e) {

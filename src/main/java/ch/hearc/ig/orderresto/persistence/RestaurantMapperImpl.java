@@ -143,12 +143,16 @@ public class RestaurantMapperImpl implements RestaurantMapper {
 
     @Override
     public void addOrder(Order order) {
-        orderMapper.addOrder(order);
+        if (order.getId() == null || orderMapper.findOrderById(order.getId()) == null) {
+            orderMapper.addOrder(order);
+        }
     }
 
     @Override
     public void addCustomer(Customer customer) {
-        customerMapper.addCustomer(customer);
+        if (customer.getId() == null || customerMapper.findCustomerById(customer.getId()) == null) {
+            customerMapper.addCustomer(customer);
+        }
     }
 
     @Override

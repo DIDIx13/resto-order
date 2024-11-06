@@ -35,7 +35,9 @@ public class MainCLI extends AbstractCLI {
         OrderCLI orderCLI = new OrderCLI(restaurantMapper, customerMapper, productMapper, orderMapper);
         if (userChoice == 1) {
             Order newOrder = orderCLI.createNewOrder();
-            restaurantMapper.addOrder(newOrder);
+            if (newOrder != null) {
+                restaurantMapper.addOrder(newOrder);
+            }
         } else {
             Order existingOrder = orderCLI.selectOrder();
             if (existingOrder != null) {
