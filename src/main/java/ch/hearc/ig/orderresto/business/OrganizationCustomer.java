@@ -5,6 +5,7 @@ public class OrganizationCustomer extends Customer {
     private String name;
     private String legalForm;
 
+
     public OrganizationCustomer(Long id, String phone, String email, Address address, String name, String legalForm) {
         super(id, phone, email, address);
         this.name = name;
@@ -18,4 +19,5 @@ public class OrganizationCustomer extends Customer {
     public String getLegalForm() {
         return legalForm;
     }
+
 }

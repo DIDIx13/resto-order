@@ -24,4 +24,5 @@ public class PrivateCustomer extends Customer {
     public String getLastName() {
         return lastName;
     }
+
 }

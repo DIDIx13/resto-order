@@ -6,11 +6,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Order {
-
     private Long id;
     private Customer customer;
     private Restaurant restaurant;
-    private Set<Product> products;
+    private Set<Product> products = new HashSet<>();
     private Boolean takeAway;
     private LocalDateTime when;
     private BigDecimal totalAmount;
@@ -19,10 +18,10 @@ public class Order {
         this.id = id;
         this.customer = customer;
         this.restaurant = restaurant;
-        this.products = new HashSet<>();
         this.takeAway = takeAway;
-        this.totalAmount = new BigDecimal(0);
         this.when = when;
+        this.products = new HashSet<>();
+        this.totalAmount = BigDecimal.ZERO;
     }
 
     public Long getId() {
@@ -57,4 +56,21 @@ public class Order {
         this.products.add(product);
         this.totalAmount = this.totalAmount.add(product.getUnitPrice());
     }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+    }
+
+    public void setTakeAway(Boolean takeAway) {
+        this.takeAway = takeAway;
+    }
+
 }

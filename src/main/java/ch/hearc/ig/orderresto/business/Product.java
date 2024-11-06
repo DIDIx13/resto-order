@@ -20,7 +20,6 @@ public class Product {
         this.description = description;
         this.orders = new HashSet<>();
         this.restaurant = restaurant;
-        restaurant.registerProduct(this);
     }
 
     public Long getId() {
@@ -51,14 +50,18 @@ public class Product {
     public String toString() {
         return String.format(
                 "%s - %.2f de chez %s: %s",
-                this.getName(),
-                this.getUnitPrice(),
-                this.getRestaurant().getName(),
-                this.getDescription()
+                this.name,
+                this.unitPrice,
+                (this.restaurant != null ? this.restaurant.getName() : "N/A"), // Handles the null case for the restaurant
+                this.description != null ? this.description : "Pas de description"
         );
     }
 
     public void addOrder(Order order) {
         this.orders.add(order);
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 }
