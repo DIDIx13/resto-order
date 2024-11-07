@@ -16,6 +16,8 @@ public class RestaurantMapperImpl implements RestaurantMapper {
     @Override
     public void addRestaurant(Restaurant restaurant) {
         String sql = "INSERT INTO RESTAURANT (nom, code_postal, localite, rue, num_rue, pays) VALUES (?, ?, ?, ?, ?, ?)";
+        String selectIdSql = "SELECT SEQ_RESTAURANT.CURRVAL FROM dual";
+
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -26,12 +28,19 @@ public class RestaurantMapperImpl implements RestaurantMapper {
             pstmt.setString(5, restaurant.getAddress().getStreetNumber());
             pstmt.setString(6, restaurant.getAddress().getCountryCode());
 
-            pstmt.executeUpdate();
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("L'ajout d'un restaurant a échoué, aucune ligne affectée.");
+            }
 
-            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    restaurant.setId(generatedKeys.getLong(1));
+            // Recupero dell'ID generato per il ristorante
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(selectIdSql)) {
+                if (rs.next()) {
+                    restaurant.setId(rs.getLong(1));
                     identityMap.put(restaurant.getId(), restaurant);
+                } else {
+                    throw new SQLException("Échec de la récupération de l'identifiant du restaurant.");
                 }
             }
         } catch (SQLException e) {

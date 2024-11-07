@@ -17,52 +17,48 @@ public class OrderMapperImpl implements OrderMapper {
 
     @Override
     public void addOrder(Order order) {
-        if (identityMap.contains(order.getId())) {
-            return;
-        }
-
-        String sqlGetOrderId = "SELECT SEQ_COMMANDE.NEXTVAL FROM DUAL"; // Gets a new ID from the sequence object
-        String sqlOrder = "INSERT INTO COMMANDE (numero, fk_client, fk_resto, a_emporter, quand) VALUES (?, ?, ?, ?, ?)";
+        String sqlOrder = "INSERT INTO COMMANDE (fk_client, fk_resto, a_emporter, quand) VALUES (?, ?, ?, ?)";
+        String selectIdSql = "SELECT SEQ_COMMANDE.CURRVAL FROM dual";
         String sqlProductOrder = "INSERT INTO PRODUIT_COMMANDE (fk_commande, fk_produit) VALUES (?, ?)";
 
         try (Connection conn = DatabaseManager.getConnection()) {
             conn.setAutoCommit(false); // Start a transaction
 
-            // Get a new order ID from the sequence
-            try (PreparedStatement pstmtGetOrderId = conn.prepareStatement(sqlGetOrderId);
-                 ResultSet rs = pstmtGetOrderId.executeQuery()) {
-                if (rs.next()) {
-                    order.setId(rs.getLong(1)); // Set the order ID with the value of the sequence
-                } else {
-                    throw new SQLException("Échec de l'extraction de l'identifiant de la commande à partir de la séquence.");
-                }
-            }
-
-            // Order entry in the COMMANDE table.
-            try (PreparedStatement pstmtOrder = conn.prepareStatement(sqlOrder)) {
-                pstmtOrder.setLong(1, order.getId()); // Use the ID obtained from the sequence
-                pstmtOrder.setLong(2, order.getCustomer().getId());
-                pstmtOrder.setLong(3, order.getRestaurant().getId());
-                pstmtOrder.setString(4, order.getTakeAway() ? "O" : "N");
-                pstmtOrder.setTimestamp(5, Timestamp.valueOf(order.getWhen()));
+            // Inserimento dell'ordine
+            try (PreparedStatement pstmtOrder = conn.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS)) {
+                pstmtOrder.setLong(1, order.getCustomer().getId());
+                pstmtOrder.setLong(2, order.getRestaurant().getId());
+                pstmtOrder.setString(3, order.getTakeAway() ? "O" : "N");
+                pstmtOrder.setTimestamp(4, Timestamp.valueOf(order.getWhen()));
 
                 int affectedRows = pstmtOrder.executeUpdate();
                 if (affectedRows == 0) {
                     throw new SQLException("Échec de l'ajout d'une commande, aucune ligne affectée.");
                 }
+
+                // Recupero dell'ID generato per l'ordine
+                try (Statement stmt = conn.createStatement();
+                     ResultSet rs = stmt.executeQuery(selectIdSql)) {
+                    if (rs.next()) {
+                        order.setId(rs.getLong(1));
+                        identityMap.put(order.getId(), order);
+                    } else {
+                        throw new SQLException("Échec de la récupération de l'identifiant de la commande.");
+                    }
+                }
             }
 
-            // Entering the products associated with this order in PRODUIT_COMMANDE
+            // Inserimento dei prodotti associati all'ordine
             try (PreparedStatement pstmtProductOrder = conn.prepareStatement(sqlProductOrder)) {
                 for (Product product : order.getProducts()) {
-                    pstmtProductOrder.setLong(1, order.getId()); // fk_commande
-                    pstmtProductOrder.setLong(2, product.getId()); // fk_produit
-                    pstmtProductOrder.addBatch(); // Use batch to optimize input
+                    pstmtProductOrder.setLong(1, order.getId());
+                    pstmtProductOrder.setLong(2, product.getId());
+                    pstmtProductOrder.addBatch();
                 }
-                pstmtProductOrder.executeBatch(); // Runs batch to insert all associations
+                pstmtProductOrder.executeBatch();
             }
+
             conn.commit();
-            identityMap.put(order.getId(), order);
 
         } catch (SQLException e) {
             e.printStackTrace();

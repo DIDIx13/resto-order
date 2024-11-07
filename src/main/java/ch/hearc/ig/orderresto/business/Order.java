@@ -7,6 +7,19 @@ import java.util.Set;
 
 public class Order {
     private Long id;
+
+    public void setRestaurant(Restaurant restaurant) {
+        this.restaurant = restaurant;
+    }
+
+    public void setProducts(Set<Product> products) {
+        this.products = products;
+    }
+
+    public void setWhen(LocalDateTime when) {
+        this.when = when;
+    }
+
     private Customer customer;
     private Restaurant restaurant;
     private Set<Product> products = new HashSet<>();

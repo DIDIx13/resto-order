@@ -14,6 +14,8 @@ public class ProductMapperImpl implements ProductMapper {
     @Override
     public void addProduct(Product product, Long restaurantId) {
         String sql = "INSERT INTO PRODUIT (fk_resto, prix_unitaire, nom, description) VALUES (?, ?, ?, ?)";
+        String selectIdSql = "SELECT SEQ_PRODUIT.CURRVAL FROM dual";
+
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -27,12 +29,14 @@ public class ProductMapperImpl implements ProductMapper {
                 throw new SQLException("L'ajout d'un produit a échoué, aucune ligne n'est affectée.");
             }
 
-            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    product.setId(generatedKeys.getLong(1));
+            // Recupero dell'ID generato per il prodotto
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(selectIdSql)) {
+                if (rs.next()) {
+                    product.setId(rs.getLong(1));
                     identityMap.put(product.getId(), product);
                 } else {
-                    throw new SQLException("Échec de l'ajout d'un produit, pas d'identification obtenue.");
+                    throw new SQLException("Échec de la récupération de l'identifiant du produit.");
                 }
             }
         } catch (SQLException e) {
