@@ -43,6 +43,18 @@ public class Restaurant {
         this.id = id;
     }
 
+    public void setOrders(Set<Order> orders) {
+        this.orders = orders;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
+
+    public void setProductsCatalog(Set<Product> productsCatalog) {
+        this.productsCatalog = productsCatalog;
+    }
+
     public void registerProduct(Product p) {
         if (p.getRestaurant() != this) {
             throw new RuntimeException("Restaurant mismatch!");
@@ -52,5 +64,9 @@ public class Restaurant {
 
     public void addOrder(Order order) {
         this.orders.add(order);
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

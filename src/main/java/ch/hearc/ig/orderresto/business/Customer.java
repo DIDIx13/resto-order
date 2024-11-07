@@ -23,6 +23,18 @@ public abstract class Customer {
         return id;
     }
 
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setOrders(Set<Order> orders) {
+        this.orders = orders;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
+
     public String getPhone() {
         return phone;
     }
@@ -45,5 +57,9 @@ public abstract class Customer {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 }

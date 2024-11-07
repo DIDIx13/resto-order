@@ -9,10 +9,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ProductMapperImpl implements ProductMapper {
+    private IdentityMap<Product> identityMap = new IdentityMap<>();
 
     @Override
     public void addProduct(Product product, Long restaurantId) {
         String sql = "INSERT INTO PRODUIT (fk_resto, prix_unitaire, nom, description) VALUES (?, ?, ?, ?)";
+        String selectIdSql = "SELECT SEQ_PRODUIT.CURRVAL FROM dual";
+
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -26,11 +29,14 @@ public class ProductMapperImpl implements ProductMapper {
                 throw new SQLException("L'ajout d'un produit a échoué, aucune ligne n'est affectée.");
             }
 
-            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    product.setId(generatedKeys.getLong(1));
+            // Recupero dell'ID generato per il prodotto
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(selectIdSql)) {
+                if (rs.next()) {
+                    product.setId(rs.getLong(1));
+                    identityMap.put(product.getId(), product);
                 } else {
-                    throw new SQLException("Échec de l'ajout d'un produit, pas d'identification obtenue.");
+                    throw new SQLException("Échec de la récupération de l'identifiant du produit.");
                 }
             }
         } catch (SQLException e) {
@@ -46,6 +52,7 @@ public class ProductMapperImpl implements ProductMapper {
 
             pstmt.setLong(1, product.getId());
             pstmt.executeUpdate();
+            identityMap.put(product.getId(), null);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -64,6 +71,7 @@ public class ProductMapperImpl implements ProductMapper {
             pstmt.setLong(4, product.getId());
 
             pstmt.executeUpdate();
+            identityMap.put(product.getId(), product);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -72,6 +80,10 @@ public class ProductMapperImpl implements ProductMapper {
 
     @Override
     public Product findProductById(Long id) {
+        if (identityMap.contains(id)) {
+            return identityMap.get(id);
+        }
+
         String sql = "SELECT * FROM PRODUIT WHERE numero = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -79,13 +91,15 @@ public class ProductMapperImpl implements ProductMapper {
             pstmt.setLong(1, id);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    return new Product(
+                    Product product = new Product(
                             rs.getLong("numero"),
                             rs.getString("nom"),
                             rs.getBigDecimal("prix_unitaire"),
                             rs.getString("description"),
                             null // Relationship with the restaurant (optional)
                     );
+                    identityMap.put(id, product);
+                    return product;
                 }
             }
         } catch (SQLException e) {
@@ -123,6 +137,7 @@ public class ProductMapperImpl implements ProductMapper {
                     );
 
                     products.add(product);
+                    identityMap.put(product.getId(), product);
                 }
             }
         } catch (SQLException e) {
@@ -160,8 +175,8 @@ public class ProductMapperImpl implements ProductMapper {
                             rs.getString("description"),
                             restaurant
                     );
-
                     products.add(product); // Add the product to the set
+                    identityMap.put(product.getId(), product);
                 }
             }
         } catch (SQLException e) {

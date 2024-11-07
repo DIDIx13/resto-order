@@ -8,13 +8,16 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class RestaurantMapperImpl implements RestaurantMapper {
-    private Set<Restaurant> restaurants = new HashSet<>();
-    private Set<Order> orders = new HashSet<>();
-    private Set<Customer> customers = new HashSet<>();
+    private IdentityMap<Restaurant> identityMap = new IdentityMap<>();
+    private OrderMapper orderMapper = new OrderMapperImpl();
+    private CustomerMapper customerMapper = new CustomerMapperImpl();
+    private ProductMapper productMapper = new ProductMapperImpl();
 
     @Override
     public void addRestaurant(Restaurant restaurant) {
         String sql = "INSERT INTO RESTAURANT (nom, code_postal, localite, rue, num_rue, pays) VALUES (?, ?, ?, ?, ?, ?)";
+        String selectIdSql = "SELECT SEQ_RESTAURANT.CURRVAL FROM dual";
+
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -25,11 +28,19 @@ public class RestaurantMapperImpl implements RestaurantMapper {
             pstmt.setString(5, restaurant.getAddress().getStreetNumber());
             pstmt.setString(6, restaurant.getAddress().getCountryCode());
 
-            pstmt.executeUpdate();
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("L'ajout d'un restaurant a échoué, aucune ligne affectée.");
+            }
 
-            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    restaurant.setId(generatedKeys.getLong(1));
+            // Recupero dell'ID generato per il ristorante
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(selectIdSql)) {
+                if (rs.next()) {
+                    restaurant.setId(rs.getLong(1));
+                    identityMap.put(restaurant.getId(), restaurant);
+                } else {
+                    throw new SQLException("Échec de la récupération de l'identifiant du restaurant.");
                 }
             }
         } catch (SQLException e) {
@@ -45,6 +56,7 @@ public class RestaurantMapperImpl implements RestaurantMapper {
 
             pstmt.setLong(1, restaurant.getId());
             pstmt.executeUpdate();
+            identityMap.put(restaurant.getId(), null);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -66,6 +78,7 @@ public class RestaurantMapperImpl implements RestaurantMapper {
             pstmt.setLong(7, restaurant.getId());
 
             pstmt.executeUpdate();
+            identityMap.put(restaurant.getId(), restaurant);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -74,6 +87,10 @@ public class RestaurantMapperImpl implements RestaurantMapper {
 
     @Override
     public Restaurant findRestaurantById(Long id) {
+        if (identityMap.contains(id)) {
+            return identityMap.get(id);
+        }
+
         String sql = "SELECT * FROM RESTAURANT WHERE numero = ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -88,11 +105,13 @@ public class RestaurantMapperImpl implements RestaurantMapper {
                             rs.getString("rue"),
                             rs.getString("num_rue")
                     );
-                    return new Restaurant(
+                    Restaurant restaurant = new Restaurant(
                             rs.getLong("numero"),
                             rs.getString("nom"),
                             address
                     );
+                    identityMap.put(id, restaurant);
+                    return restaurant;
                 }
             }
         } catch (SQLException e) {
@@ -123,6 +142,7 @@ public class RestaurantMapperImpl implements RestaurantMapper {
                         address
                 );
                 restaurants.add(restaurant);
+                identityMap.put(restaurant.getId(), restaurant);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -132,44 +152,24 @@ public class RestaurantMapperImpl implements RestaurantMapper {
 
     @Override
     public void addOrder(Order order) {
-        orders.add(order);
+        if (order.getId() == null || orderMapper.findOrderById(order.getId()) == null) {
+            orderMapper.addOrder(order);
+        }
     }
 
     @Override
     public void addCustomer(Customer customer) {
-        customers.add(customer);
+        if (customer.getId() == null || customerMapper.findCustomerById(customer.getId()) == null) {
+            customerMapper.addCustomer(customer);
+        }
     }
 
     @Override
     public Customer findCustomerByEmail(String email) {
-        return customers.stream()
-                .filter(customer -> customer.getEmail().equals(email))
-                .findFirst()
-                .orElse(null);
+        return customerMapper.findCustomerByEmail(email);
     }
 
     public Set<Product> findProductsByRestaurantId(Long restaurantId) {
-        Set<Product> products = new HashSet<>();
-        String sql = "SELECT * FROM PRODUIT WHERE fk_resto = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setLong(1, restaurantId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    Product product = new Product(
-                            rs.getLong("numero"),
-                            rs.getString("nom"),
-                            rs.getBigDecimal("prix_unitaire"),
-                            rs.getString("description"),
-                            null // the restaurant will be added later
-                    );
-                    products.add(product);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return products;
+        return productMapper.findProductsByRestaurantId(restaurantId);
     }
 }

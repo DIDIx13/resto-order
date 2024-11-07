@@ -6,6 +6,18 @@ public class PrivateCustomer extends Customer {
     private String firstName;
     private String lastName;
 
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
     public PrivateCustomer(Long id, String phone, String email, Address address, String gender, String firstName, String lastName) {
         super(id, phone, email, address);
         this.gender = gender;
