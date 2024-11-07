@@ -25,6 +25,7 @@ public class OrderCLI extends AbstractCLI {
     }
 
     public Order createNewOrder() {
+        this.ln("======================================================");
         Restaurant restaurant = new RestaurantCLI(orderService).getExistingRestaurant();
 
         Set<Product> products = orderService.getProductsByRestaurant(restaurant.getId());
@@ -42,14 +43,35 @@ public class OrderCLI extends AbstractCLI {
         int productChoice = this.readIntFromUser(1, productsList.size());
         Product selectedProduct = productsList.get(productChoice - 1);
 
-        Customer customer = new CustomerCLI(orderService).getExistingCustomer();
+        this.ln("======================================================");
+        this.ln("0. Annuler");
+        this.ln("1. Je suis un client existant");
+        this.ln("2. Je suis un nouveau client");
+        int userChoice = this.readIntFromUser(2);
+
+        if (userChoice == 0) {
+            this.ln("Commande annulée.");
+            return null;
+        }
+
+        CustomerCLI customerCLI = new CustomerCLI(orderService);
+        Customer customer;
+        if (userChoice == 1) {
+            customer = customerCLI.getExistingCustomer();
+        } else {
+            customer = customerCLI.createNewCustomer();
+        }
 
         if (customer == null) {
             this.ln("Client introuvable ou création annulée.");
             return null;
         }
 
-        Order order = new Order(null, customer, restaurant, false, LocalDateTime.now());
+        this.ln("Commande à emporter ? (O/N)");
+        String takeAwayChoice = this.readChoicesFromUser(new String[]{"O", "N"});
+        boolean takeAway = "O".equalsIgnoreCase(takeAwayChoice);
+
+        Order order = new Order(null, customer, restaurant, takeAway, LocalDateTime.now());
         order.addProduct(selectedProduct);
         orderService.addOrder(order);
 

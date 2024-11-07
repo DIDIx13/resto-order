@@ -33,6 +33,8 @@ public class MainCLI extends AbstractCLI {
         if (userChoice == 1) {
             Order newOrder = orderCLI.createNewOrder();
             if (newOrder != null) {
+                RestaurantMapper rs = orderService.getRestaurantMapper();
+                rs.addOrder(newOrder);
                 this.ln("Commande créée avec succès!");
             }
         } else {
