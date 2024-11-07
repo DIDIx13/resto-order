@@ -5,12 +5,13 @@ import ch.hearc.ig.orderresto.business.Customer;
 import ch.hearc.ig.orderresto.business.OrganizationCustomer;
 import ch.hearc.ig.orderresto.business.PrivateCustomer;
 import ch.hearc.ig.orderresto.persistence.CustomerMapper;
+import ch.hearc.ig.orderresto.services.OrderService;
 
 public class CustomerCLI extends AbstractCLI {
     private CustomerMapper customerMapper;
 
-    public CustomerCLI(CustomerMapper customerMapper) {
-        this.customerMapper = customerMapper;
+    public CustomerCLI(OrderService orderService) {
+        this.customerMapper = orderService.getCustomerMapper();
     }
 
     public Customer getExistingCustomer() {

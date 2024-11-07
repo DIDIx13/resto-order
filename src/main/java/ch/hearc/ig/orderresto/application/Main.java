@@ -4,6 +4,7 @@ import ch.hearc.ig.orderresto.persistence.RestaurantMapper;
 import ch.hearc.ig.orderresto.persistence.RestaurantMapperImpl;
 import ch.hearc.ig.orderresto.persistence.config.DatabaseConfig;
 import ch.hearc.ig.orderresto.presentation.MainCLI;
+import ch.hearc.ig.orderresto.services.OrderService;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -18,7 +19,7 @@ public class Main {
     } catch (SQLException e) {
       e.printStackTrace();
     }
-    RestaurantMapper restaurantMapper = new RestaurantMapperImpl();
-    (new MainCLI(restaurantMapper)).run();
+    OrderService orderService = new OrderService();
+    (new MainCLI(orderService)).run();
   }
 }

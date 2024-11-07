@@ -3,18 +3,14 @@ package ch.hearc.ig.orderresto.presentation;
 import ch.hearc.ig.orderresto.business.Order;
 // import ch.hearc.ig.orderresto.persistence.FakeDb;
 import ch.hearc.ig.orderresto.persistence.*;
+import ch.hearc.ig.orderresto.services.OrderService;
 
 public class MainCLI extends AbstractCLI {
-    private RestaurantMapper restaurantMapper;
-    private ProductMapper productMapper;
-    private CustomerMapper customerMapper;
-    private OrderMapper orderMapper;
 
-    public MainCLI(RestaurantMapper restaurantMapper) {
-        this.restaurantMapper = restaurantMapper;
-        this.productMapper = new ProductMapperImpl();
-        this.customerMapper = new CustomerMapperImpl();
-        this.orderMapper = new OrderMapperImpl();
+    private final OrderService orderService;
+
+    public MainCLI(OrderService orderService) {
+        this.orderService = orderService;
     }
 
     public void run() {
@@ -32,11 +28,12 @@ public class MainCLI extends AbstractCLI {
             this.ln("Good bye!");
             return;
         }
-        OrderCLI orderCLI = new OrderCLI(restaurantMapper, customerMapper, productMapper, orderMapper);
+
+        OrderCLI orderCLI = new OrderCLI(orderService);
         if (userChoice == 1) {
             Order newOrder = orderCLI.createNewOrder();
             if (newOrder != null) {
-                restaurantMapper.addOrder(newOrder);
+                this.ln("Commande créée avec succès!");
             }
         } else {
             Order existingOrder = orderCLI.selectOrder();

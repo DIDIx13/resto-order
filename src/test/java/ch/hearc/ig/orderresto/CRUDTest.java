@@ -3,6 +3,7 @@ package ch.hearc.ig.orderresto;
 import ch.hearc.ig.orderresto.business.*;
 import ch.hearc.ig.orderresto.business.Order;
 import ch.hearc.ig.orderresto.persistence.*;
+import ch.hearc.ig.orderresto.services.OrderService;
 import org.junit.jupiter.api.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -17,10 +18,11 @@ public class CRUDTest {
 
     @BeforeEach
     public void setup() {
-        customerMapper = new CustomerMapperImpl();
-        productMapper = new ProductMapperImpl();
-        orderMapper = new OrderMapperImpl();
-        restaurantMapper = new RestaurantMapperImpl();
+        OrderService orderService = new OrderService();
+        customerMapper = orderService.getCustomerMapper();
+        productMapper = orderService.getProductMapper();
+        orderMapper = orderService.getOrderMapper();
+        restaurantMapper = orderService.getRestaurantMapper();
     }
 
     // Customer CRUD tests

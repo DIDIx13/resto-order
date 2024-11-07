@@ -14,6 +14,26 @@ import java.util.Set;
 
 public class OrderMapperImpl implements OrderMapper {
     private IdentityMap<Order> identityMap = new IdentityMap<>();
+    private final Connection connection;
+    private CustomerMapper customerMapper;
+    private RestaurantMapper restaurantMapper;
+    private ProductMapper productMapper;
+
+    public OrderMapperImpl(Connection connection) {
+        this.connection = connection;
+    }
+
+    public void setCustomerMapper(CustomerMapper customerMapper) {
+        this.customerMapper = customerMapper;
+    }
+
+    public void setRestaurantMapper(RestaurantMapper restaurantMapper) {
+        this.restaurantMapper = restaurantMapper;
+    }
+
+    public void setProductMapper(ProductMapper productMapper) {
+        this.productMapper = productMapper;
+    }
 
     @Override
     public void addOrder(Order order) {
@@ -21,11 +41,11 @@ public class OrderMapperImpl implements OrderMapper {
         String selectIdSql = "SELECT SEQ_COMMANDE.CURRVAL FROM dual";
         String sqlProductOrder = "INSERT INTO PRODUIT_COMMANDE (fk_commande, fk_produit) VALUES (?, ?)";
 
-        try (Connection conn = DatabaseManager.getConnection()) {
-            conn.setAutoCommit(false); // Start a transaction
+        try {
+            connection.setAutoCommit(false); // Start a transaction
 
             // Inserimento dell'ordine
-            try (PreparedStatement pstmtOrder = conn.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement pstmtOrder = connection.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS)) {
                 pstmtOrder.setLong(1, order.getCustomer().getId());
                 pstmtOrder.setLong(2, order.getRestaurant().getId());
                 pstmtOrder.setString(3, order.getTakeAway() ? "O" : "N");
@@ -37,7 +57,7 @@ public class OrderMapperImpl implements OrderMapper {
                 }
 
                 // Recupero dell'ID generato per l'ordine
-                try (Statement stmt = conn.createStatement();
+                try (Statement stmt = connection.createStatement();
                      ResultSet rs = stmt.executeQuery(selectIdSql)) {
                     if (rs.next()) {
                         order.setId(rs.getLong(1));
@@ -49,7 +69,7 @@ public class OrderMapperImpl implements OrderMapper {
             }
 
             // Inserimento dei prodotti associati all'ordine
-            try (PreparedStatement pstmtProductOrder = conn.prepareStatement(sqlProductOrder)) {
+            try (PreparedStatement pstmtProductOrder = connection.prepareStatement(sqlProductOrder)) {
                 for (Product product : order.getProducts()) {
                     pstmtProductOrder.setLong(1, order.getId());
                     pstmtProductOrder.setLong(2, product.getId());
@@ -58,7 +78,7 @@ public class OrderMapperImpl implements OrderMapper {
                 pstmtProductOrder.executeBatch();
             }
 
-            conn.commit();
+            connection.commit();
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -68,8 +88,7 @@ public class OrderMapperImpl implements OrderMapper {
     @Override
     public void removeOrder(Order order) {
         String sql = "DELETE FROM COMMANDE WHERE numero = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
 
             pstmt.setLong(1, order.getId());
             pstmt.executeUpdate();
@@ -83,8 +102,7 @@ public class OrderMapperImpl implements OrderMapper {
     @Override
     public void updateOrder(Order order) {
         String sql = "UPDATE COMMANDE SET fk_client = ?, fk_resto = ?, a_emporter = ?, quand = ? WHERE numero = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
 
             pstmt.setLong(1, order.getCustomer().getId());
             pstmt.setLong(2, order.getRestaurant().getId());
@@ -96,13 +114,13 @@ public class OrderMapperImpl implements OrderMapper {
 
             // Remove old products associated with the order and insert new ones
             String deleteOrderProductsSql = "DELETE FROM PRODUIT_COMMANDE WHERE fk_commande = ?";
-            try (PreparedStatement deleteStmt = conn.prepareStatement(deleteOrderProductsSql)) {
+            try (PreparedStatement deleteStmt = connection.prepareStatement(deleteOrderProductsSql)) {
                 deleteStmt.setLong(1, order.getId());
                 deleteStmt.executeUpdate();
             }
 
             String orderProductSql = "INSERT INTO PRODUIT_COMMANDE (fk_commande, fk_produit) VALUES (?, ?)";
-            try (PreparedStatement orderProductStmt = conn.prepareStatement(orderProductSql)) {
+            try (PreparedStatement orderProductStmt = connection.prepareStatement(orderProductSql)) {
                 for (Product product : order.getProducts()) {
                     orderProductStmt.setLong(1, order.getId());
                     orderProductStmt.setLong(2, product.getId());
@@ -125,8 +143,7 @@ public class OrderMapperImpl implements OrderMapper {
         }
 
         String sql = "SELECT * FROM COMMANDE WHERE numero = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
 
             pstmt.setLong(1, id);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -146,8 +163,7 @@ public class OrderMapperImpl implements OrderMapper {
     public Set<Order> findOrdersByCustomerId(Long customerId) {
         Set<Order> orders = new HashSet<>();
         String sql = "SELECT * FROM COMMANDE WHERE fk_client = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
 
             pstmt.setLong(1, customerId);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -167,8 +183,7 @@ public class OrderMapperImpl implements OrderMapper {
     public Set<Order> findAllOrders() {
         Set<Order> orders = new HashSet<>();
         String sql = "SELECT * FROM COMMANDE";
-        try (Connection conn = DatabaseManager.getConnection();
-             Statement stmt = conn.createStatement();
+        try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
@@ -183,9 +198,6 @@ public class OrderMapperImpl implements OrderMapper {
     }
 
     private Order mapToOrder(ResultSet rs) throws SQLException {
-        CustomerMapper customerMapper = new CustomerMapperImpl();
-        RestaurantMapper restaurantMapper = new RestaurantMapperImpl();
-        ProductMapper productMapper = new ProductMapperImpl();
 
         Long customerId = rs.getLong("fk_client");
         Long restaurantId = rs.getLong("fk_resto");

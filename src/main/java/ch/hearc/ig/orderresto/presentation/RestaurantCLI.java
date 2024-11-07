@@ -2,13 +2,14 @@ package ch.hearc.ig.orderresto.presentation;
 
 import ch.hearc.ig.orderresto.business.Restaurant;
 import ch.hearc.ig.orderresto.persistence.RestaurantMapper;
+import ch.hearc.ig.orderresto.services.OrderService;
 // import ch.hearc.ig.orderresto.persistence.FakeDb;
 
 public class RestaurantCLI extends AbstractCLI {
     private RestaurantMapper restaurantMapper;
 
-    public RestaurantCLI(RestaurantMapper restaurantMapper) {
-        this.restaurantMapper = restaurantMapper;
+    public RestaurantCLI(OrderService orderService) {
+        this.restaurantMapper = orderService.getRestaurantMapper();
     }
 
     public Restaurant getExistingRestaurant() {
