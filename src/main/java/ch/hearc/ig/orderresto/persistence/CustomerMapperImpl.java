@@ -93,7 +93,7 @@ public class CustomerMapperImpl implements CustomerMapper {
             pstmt.setString(8, customer.getAddress().getCountryCode());
             if (customer instanceof PrivateCustomer) {
                 PrivateCustomer privateCustomer = (PrivateCustomer) customer;
-                pstmt.setString(9, privateCustomer.getGender());
+                pstmt.setString(9, privateCustomer.getGender().equals("H") ? "N" : "O");
                 pstmt.setString(10, privateCustomer.getFirstName());
                 pstmt.setNull(11, Types.VARCHAR);
                 pstmt.setString(12, "P");
