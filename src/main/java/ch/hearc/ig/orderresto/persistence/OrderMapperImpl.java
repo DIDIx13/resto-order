@@ -16,13 +16,11 @@ public class OrderMapperImpl implements OrderMapper {
     private IdentityMap<Order> identityMap = new IdentityMap<>();
 
     @Override
-    public void addOrder(Order order) {
+    public void addOrder(Connection conn, Order order) throws SQLException {
         String sqlOrder = "INSERT INTO COMMANDE (fk_client, fk_resto, a_emporter, quand) VALUES (?, ?, ?, ?)";
         String selectIdSql = "SELECT SEQ_COMMANDE.CURRVAL FROM dual";
         String sqlProductOrder = "INSERT INTO PRODUIT_COMMANDE (fk_commande, fk_produit) VALUES (?, ?)";
 
-        try (Connection conn = DatabaseManager.getConnection()) {
-            conn.setAutoCommit(false); // Start a transaction
 
             // Inserimento dell'ordine
             try (PreparedStatement pstmtOrder = conn.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS)) {
@@ -57,19 +55,12 @@ public class OrderMapperImpl implements OrderMapper {
                 }
                 pstmtProductOrder.executeBatch();
             }
-
-            conn.commit();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
-    public void removeOrder(Order order) {
+    public void removeOrder(Connection conn, Order order) throws SQLException {
         String sql = "DELETE FROM COMMANDE WHERE numero = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setLong(1, order.getId());
             pstmt.executeUpdate();
@@ -81,10 +72,9 @@ public class OrderMapperImpl implements OrderMapper {
     }
 
     @Override
-    public void updateOrder(Order order) {
+    public void updateOrder(Connection conn, Order order) throws SQLException {
         String sql = "UPDATE COMMANDE SET fk_client = ?, fk_resto = ?, a_emporter = ?, quand = ? WHERE numero = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setLong(1, order.getCustomer().getId());
             pstmt.setLong(2, order.getRestaurant().getId());
@@ -119,14 +109,13 @@ public class OrderMapperImpl implements OrderMapper {
     }
 
     @Override
-    public Order findOrderById(Long id) {
+    public Order findOrderById(Connection conn, Long id) throws SQLException {
         if (identityMap.contains(id)) {
             return identityMap.get(id);
         }
 
         String sql = "SELECT * FROM COMMANDE WHERE numero = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setLong(1, id);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -143,11 +132,10 @@ public class OrderMapperImpl implements OrderMapper {
     }
 
     @Override
-    public Set<Order> findOrdersByCustomerId(Long customerId) {
+    public Set<Order> findOrdersByCustomerId(Connection conn, Long customerId) throws SQLException {
         Set<Order> orders = new HashSet<>();
         String sql = "SELECT * FROM COMMANDE WHERE fk_client = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setLong(1, customerId);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -164,11 +152,10 @@ public class OrderMapperImpl implements OrderMapper {
     }
 
     @Override
-    public Set<Order> findAllOrders() {
+    public Set<Order> findAllOrders(Connection conn) throws SQLException {
         Set<Order> orders = new HashSet<>();
         String sql = "SELECT * FROM COMMANDE";
-        try (Connection conn = DatabaseManager.getConnection();
-             Statement stmt = conn.createStatement();
+        try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
