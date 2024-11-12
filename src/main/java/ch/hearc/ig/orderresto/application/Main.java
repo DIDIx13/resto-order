@@ -18,7 +18,6 @@ public class Main {
     } catch (SQLException e) {
       e.printStackTrace();
     }
-    RestaurantMapper restaurantMapper = new RestaurantMapperImpl();
-    (new MainCLI(restaurantMapper)).run();
+    (new MainCLI()).run();
   }
 }

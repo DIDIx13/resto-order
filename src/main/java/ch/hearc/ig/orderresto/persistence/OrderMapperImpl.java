@@ -120,7 +120,7 @@ public class OrderMapperImpl implements OrderMapper {
             pstmt.setLong(1, id);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    Order order = mapToOrder(rs);
+                    Order order = mapToOrder(conn, rs);
                     identityMap.put(id, order);
                     return order;
                 }
@@ -140,7 +140,7 @@ public class OrderMapperImpl implements OrderMapper {
             pstmt.setLong(1, customerId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    Order order = mapToOrder(rs);
+                    Order order = mapToOrder(conn, rs);
                     orders.add(order);
                     identityMap.put(order.getId(), order);
                 }
@@ -159,7 +159,7 @@ public class OrderMapperImpl implements OrderMapper {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                Order order = mapToOrder(rs);
+                Order order = mapToOrder(conn, rs);
                 orders.add(order);
                 identityMap.put(order.getId(), order);
             }
@@ -169,7 +169,7 @@ public class OrderMapperImpl implements OrderMapper {
         return orders;
     }
 
-    private Order mapToOrder(ResultSet rs) throws SQLException {
+    private Order mapToOrder(Connection conn, ResultSet rs) throws SQLException {
         CustomerMapper customerMapper = new CustomerMapperImpl();
         RestaurantMapper restaurantMapper = new RestaurantMapperImpl();
         ProductMapper productMapper = new ProductMapperImpl();
@@ -177,15 +177,15 @@ public class OrderMapperImpl implements OrderMapper {
         Long customerId = rs.getLong("fk_client");
         Long restaurantId = rs.getLong("fk_resto");
 
-        Customer customer = customerMapper.findCustomerById(customerId);
-        Restaurant restaurant = restaurantMapper.findRestaurantById(restaurantId);
+        Customer customer = customerMapper.findCustomerById(conn, customerId);
+        Restaurant restaurant = restaurantMapper.findRestaurantById(conn, restaurantId);
         Boolean takeAway = "O".equals(rs.getString("a_emporter"));
         LocalDateTime when = rs.getTimestamp("quand").toLocalDateTime();
 
         Order order = new Order(rs.getLong("numero"), customer, restaurant, takeAway, when);
 
         // Retrieve products associated with the order
-        Set<Product> products = productMapper.findProductsByOrderId(order.getId());
+        Set<Product> products = productMapper.findProductsByOrderId(conn, order.getId());
         BigDecimal totalAmount = BigDecimal.ZERO;  // Initialize the total to zero
         for (Product product : products) {
             order.addProduct(product);  // Adds the product to the order

@@ -7,6 +7,7 @@ import ch.hearc.ig.orderresto.persistence.OrderMapper;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Set;
 
 public class OrderService {
     private final OrderMapper orderMapper; // votre Data Access Object
@@ -155,15 +156,16 @@ public class OrderService {
         }
     }
 
-    public void findOrdersByCustomerId(Long customerId) {
+    public Set<Order> findOrdersByCustomerId(Long customerId) {
         Connection connection = null;
+        Set<Order> orders = null;
         try {
             // Ouvrir une connexion ou en obtenir une depuis le pool
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
             // Appel au DAO pour ajouter l'utilisateur
-            orderMapper.findOrdersByCustomerId(connection, customerId);
+            orders = orderMapper.findOrdersByCustomerId(connection, customerId);
 
             // Commit de la transaction
             connection.commit();
@@ -186,18 +188,20 @@ public class OrderService {
                     closeEx.printStackTrace();
                 }
             }
+            return orders;
         }
     }
 
-    public void findAllOrders() {
+    public Set<Order> findAllOrders() {
         Connection connection = null;
+        Set<Order> orders = null;
         try {
             // Ouvrir une connexion ou en obtenir une depuis le pool
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
             // Appel au DAO pour ajouter l'utilisateur
-            orderMapper.findAllOrders(connection);
+            orders = orderMapper.findAllOrders(connection);
 
             // Commit de la transaction
             connection.commit();
@@ -220,6 +224,7 @@ public class OrderService {
                     closeEx.printStackTrace();
                 }
             }
+            return orders;
         }
     }
 }

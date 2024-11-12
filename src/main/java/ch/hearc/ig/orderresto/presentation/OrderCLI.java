@@ -8,31 +8,35 @@ import ch.hearc.ig.orderresto.persistence.OrderMapper;
 import ch.hearc.ig.orderresto.persistence.CustomerMapper;
 import ch.hearc.ig.orderresto.persistence.ProductMapper;
 import ch.hearc.ig.orderresto.persistence.RestaurantMapper;
+import ch.hearc.ig.orderresto.services.CustomerService;
+import ch.hearc.ig.orderresto.services.OrderService;
+import ch.hearc.ig.orderresto.services.ProductService;
+import ch.hearc.ig.orderresto.services.RestaurantService;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Set;
 
 public class OrderCLI extends AbstractCLI {
-    private RestaurantMapper restaurantMapper;
-    private CustomerMapper customerMapper;
-    private ProductMapper productMapper;
-    private OrderMapper orderMapper;
+    private RestaurantService restaurantService;
+    private CustomerService customerService;
+    private ProductService productService;
+    private OrderService orderService;
 
-    public OrderCLI(RestaurantMapper restaurantMapper, CustomerMapper customerMapper, ProductMapper productMapper, OrderMapper orderMapper) {
-        this.restaurantMapper = restaurantMapper;
-        this.customerMapper = customerMapper;
-        this.productMapper = productMapper;
-        this.orderMapper = orderMapper;
+    public OrderCLI() {
+        this.restaurantService = new RestaurantService();
+        this.productService = new ProductService();
+        this.customerService = new CustomerService();
+        this.orderService = new OrderService();
     }
 
     // Method to create a new command and save it to the database
     public Order createNewOrder() {
         this.ln("======================================================");
-        Restaurant restaurant = (new RestaurantCLI(restaurantMapper)).getExistingRestaurant();
+        Restaurant restaurant = (new RestaurantCLI()).getExistingRestaurant();
 
         // Retrieves products from the selected restaurant
-        Set<Product> products = productMapper.findProductsByRestaurantId(restaurant.getId());
+        Set<Product> products = productService.findProductsByRestaurantId(restaurant.getId());
 
         if (products.isEmpty()) {
             this.ln("Le restaurant sélectionné n'a pas de produits disponibles.");
@@ -60,7 +64,7 @@ public class OrderCLI extends AbstractCLI {
             return null;
         }
 
-        CustomerCLI customerCLI = new CustomerCLI(customerMapper);
+        CustomerCLI customerCLI = new CustomerCLI();
         Customer customer;
         if (userChoice == 1) {
             customer = customerCLI.getExistingCustomer();
@@ -80,7 +84,7 @@ public class OrderCLI extends AbstractCLI {
         // Creating the order and saving it to the database
         Order order = new Order(null, customer, restaurant, takeAway, LocalDateTime.now());
         order.addProduct(selectedProduct);
-        orderMapper.addOrder(order);
+        orderService.addOrder(order);
 
         this.ln("Commande ajoutée avec succès!");
         return order;
@@ -88,13 +92,13 @@ public class OrderCLI extends AbstractCLI {
 
     // Method for selecting an existing order associated with a client
     public Order selectOrder() {
-        Customer customer = (new CustomerCLI(customerMapper)).getExistingCustomer();
+        Customer customer = (new CustomerCLI()).getExistingCustomer();
         if (customer == null || customer.getId() == null) {
             this.ln("Désolé, le client n'existe pas ou l'ID du client est invalide.");
             return null;
         }
 
-        Set<Order> orders = orderMapper.findOrdersByCustomerId(customer.getId());
+        Set<Order> orders = orderService.findOrdersByCustomerId(customer.getId());
         if (orders.isEmpty()) {
             this.ln(String.format("Désolé, il n'y a aucune commande pour %s", customer.getEmail()));
             return null;

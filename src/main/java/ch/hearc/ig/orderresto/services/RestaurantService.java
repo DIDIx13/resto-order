@@ -10,6 +10,7 @@ import ch.hearc.ig.orderresto.persistence.config.DatabaseManager;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Set;
 
 public class RestaurantService {
     private final RestaurantMapper restaurantMapper; // votre Data Access Object
@@ -158,15 +159,16 @@ public class RestaurantService {
         }
     }
 
-    public void findAllRestaurants() {
+    public Set<Restaurant> findAllRestaurants() {
         Connection connection = null;
+        Set<Restaurant> restaurants = null;
         try {
             // Ouvrir une connexion ou en obtenir une depuis le pool
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
             // Appel au DAO pour ajouter l'utilisateur
-            restaurantMapper.findAllRestaurants(connection);
+            restaurants = restaurantMapper.findAllRestaurants(connection);
 
             // Commit de la transaction
             connection.commit();
@@ -189,6 +191,7 @@ public class RestaurantService {
                     closeEx.printStackTrace();
                 }
             }
+            return restaurants;
         }
     }
 }
