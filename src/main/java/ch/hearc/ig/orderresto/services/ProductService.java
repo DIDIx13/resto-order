@@ -121,7 +121,7 @@ public class ProductService {
         }
     }
 
-    public Product findProductById(Connection conn, Long id) {
+    public Product findProductById(Long id) {
         Connection connection = null;
         Product product = null;
         try {
@@ -193,7 +193,7 @@ public class ProductService {
         }
     }
 
-    public Set<Product> findProductsByOrderId(Connection conn, Long orderId) {
+    public Set<Product> findProductsByOrderId(Long orderId) {
         Connection connection = null;
         Set<Product> products = null;
         try {
