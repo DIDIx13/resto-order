@@ -25,7 +25,7 @@ public class CustomerService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+
             customerMapper.addCustomer(connection, customer);
 
             // Commit de la transaction
@@ -59,7 +59,7 @@ public class CustomerService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+
             customerMapper.removeCustomer(connection, customer);
 
             // Commit de la transaction
@@ -93,7 +93,7 @@ public class CustomerService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+
             customerMapper.updateCustomer(connection, customer);
 
             // Commit de la transaction
@@ -128,7 +128,7 @@ public class CustomerService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+
             customer = customerMapper.findCustomerById(connection, id);
 
             // Commit de la transaction
@@ -164,7 +164,7 @@ public class CustomerService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+
             customer = customerMapper.findCustomerByEmail(connection, email);
 
             // Commit de la transaction
@@ -200,7 +200,7 @@ public class CustomerService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+
             customers = customerMapper.findAllCustomers(connection);
 
             // Commit de la transaction

@@ -26,7 +26,6 @@ public class ProductService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
             productMapper.addProduct(connection, product, restaurantId);
 
             // Commit de la transaction
@@ -60,7 +59,6 @@ public class ProductService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
             productMapper.removeProduct(connection, product);
 
             // Commit de la transaction
@@ -94,7 +92,7 @@ public class ProductService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+
             productMapper.updateProduct(connection, product);
 
             // Commit de la transaction
@@ -129,7 +127,7 @@ public class ProductService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+
             product = productMapper.findProductById(connection, id);
 
             // Commit de la transaction
@@ -165,7 +163,7 @@ public class ProductService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+
             products = productMapper.findProductsByRestaurantId(connection, restaurantId);
 
             // Commit de la transaction
@@ -201,7 +199,7 @@ public class ProductService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+
             products = productMapper.findProductsByOrderId(connection, orderId);
 
             // Commit de la transaction

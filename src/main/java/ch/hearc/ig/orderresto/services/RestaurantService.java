@@ -28,7 +28,7 @@ public class RestaurantService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+              
             restaurantMapper.addRestaurant(connection, restaurant);
 
             // Commit de la transaction
@@ -62,7 +62,7 @@ public class RestaurantService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+              
             restaurantMapper.removeRestaurant(connection, restaurant);
 
             // Commit de la transaction
@@ -96,7 +96,7 @@ public class RestaurantService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+              
             restaurantMapper.updateRestaurant(connection, restaurant);
 
             // Commit de la transaction
@@ -131,7 +131,7 @@ public class RestaurantService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+              
             restaurant = restaurantMapper.findRestaurantById(connection, id);
 
             // Commit de la transaction
@@ -167,7 +167,7 @@ public class RestaurantService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+              
             restaurants = restaurantMapper.findAllRestaurants(connection);
 
             // Commit de la transaction

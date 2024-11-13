@@ -25,7 +25,7 @@ public class OrderService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+
             orderMapper.addOrder(connection, order);
 
             // Commit de la transaction
@@ -59,7 +59,7 @@ public class OrderService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+
             orderMapper.removeOrder(connection, order);
 
             // Commit de la transaction
@@ -93,7 +93,7 @@ public class OrderService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+
             orderMapper.updateOrder(connection, order);
 
             // Commit de la transaction
@@ -128,7 +128,7 @@ public class OrderService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+
             order = orderMapper.findOrderById(connection, id);
 
             // Commit de la transaction
@@ -164,7 +164,7 @@ public class OrderService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+
             orders = orderMapper.findOrdersByCustomerId(connection, customerId);
 
             // Commit de la transaction
@@ -200,7 +200,7 @@ public class OrderService {
             connection = databaseManager.getConnection();
             connection.setAutoCommit(false); // Commencer la transaction
 
-            // Appel au DAO pour ajouter l'utilisateur
+
             orders = orderMapper.findAllOrders(connection);
 
             // Commit de la transaction
