@@ -14,12 +14,11 @@ public class RestaurantMapperImpl implements RestaurantMapper {
     private ProductMapper productMapper = new ProductMapperImpl();
 
     @Override
-    public void addRestaurant(Restaurant restaurant) {
+    public void addRestaurant(Connection conn, Restaurant restaurant) throws SQLException {
         String sql = "INSERT INTO RESTAURANT (nom, code_postal, localite, rue, num_rue, pays) VALUES (?, ?, ?, ?, ?, ?)";
         String selectIdSql = "SELECT SEQ_RESTAURANT.CURRVAL FROM dual";
 
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setString(1, restaurant.getName());
             pstmt.setString(2, restaurant.getAddress().getPostalCode());
@@ -43,31 +42,25 @@ public class RestaurantMapperImpl implements RestaurantMapper {
                     throw new SQLException("Échec de la récupération de l'identifiant du restaurant.");
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
     @Override
-    public void removeRestaurant(Restaurant restaurant) {
+    public void removeRestaurant(Connection conn, Restaurant restaurant) throws SQLException {
         String sql = "DELETE FROM RESTAURANT WHERE numero = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setLong(1, restaurant.getId());
             pstmt.executeUpdate();
             identityMap.put(restaurant.getId(), null);
 
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
     @Override
-    public void updateRestaurant(Restaurant restaurant) {
+    public void updateRestaurant(Connection conn, Restaurant restaurant) throws SQLException {
         String sql = "UPDATE RESTAURANT SET nom = ?, code_postal = ?, localite = ?, rue = ?, num_rue = ?, pays = ? WHERE numero = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, restaurant.getName());
             pstmt.setString(2, restaurant.getAddress().getPostalCode());
@@ -80,20 +73,17 @@ public class RestaurantMapperImpl implements RestaurantMapper {
             pstmt.executeUpdate();
             identityMap.put(restaurant.getId(), restaurant);
 
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
     @Override
-    public Restaurant findRestaurantById(Long id) {
+    public Restaurant findRestaurantById(Connection conn, Long id) throws SQLException {
         if (identityMap.contains(id)) {
             return identityMap.get(id);
         }
 
         String sql = "SELECT * FROM RESTAURANT WHERE numero = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setLong(1, id);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -114,18 +104,15 @@ public class RestaurantMapperImpl implements RestaurantMapper {
                     return restaurant;
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return null;
     }
 
     @Override
-    public Set<Restaurant> findAllRestaurants() {
+    public Set<Restaurant> findAllRestaurants(Connection conn) throws SQLException {
         Set<Restaurant> restaurants = new HashSet<>();
         String sql = "SELECT * FROM RESTAURANT";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
+        try (PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
@@ -144,32 +131,7 @@ public class RestaurantMapperImpl implements RestaurantMapper {
                 restaurants.add(restaurant);
                 identityMap.put(restaurant.getId(), restaurant);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return restaurants;
-    }
-
-    @Override
-    public void addOrder(Order order) {
-        if (order.getId() == null || orderMapper.findOrderById(order.getId()) == null) {
-            orderMapper.addOrder(order);
-        }
-    }
-
-    @Override
-    public void addCustomer(Customer customer) {
-        if (customer.getId() == null || customerMapper.findCustomerById(customer.getId()) == null) {
-            customerMapper.addCustomer(customer);
-        }
-    }
-
-    @Override
-    public Customer findCustomerByEmail(String email) {
-        return customerMapper.findCustomerByEmail(email);
-    }
-
-    public Set<Product> findProductsByRestaurantId(Long restaurantId) {
-        return productMapper.findProductsByRestaurantId(restaurantId);
     }
 }

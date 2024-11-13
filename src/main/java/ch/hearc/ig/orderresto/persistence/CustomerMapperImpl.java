@@ -15,10 +15,9 @@ public class CustomerMapperImpl implements CustomerMapper {
     private IdentityMap<Customer> identityMap = new IdentityMap<>();
 
     @Override
-    public void addCustomer(Customer customer) {
+    public void addCustomer(Connection conn, Customer customer) throws SQLException {
         String sql = "INSERT INTO CLIENT (email, telephone, nom, code_postal, localite, rue, num_rue, pays, est_une_femme, prenom, forme_sociale, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setString(1, customer.getEmail());
             pstmt.setString(2, customer.getPhone());
@@ -57,31 +56,25 @@ public class CustomerMapperImpl implements CustomerMapper {
                     throw new SQLException("Échec de la récupération de l'identifiant du client.");
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
     @Override
-    public void removeCustomer(Customer customer) {
+    public void removeCustomer(Connection conn, Customer customer) throws SQLException {
         String sql = "DELETE FROM CLIENT WHERE numero = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setLong(1, customer.getId());
             pstmt.executeUpdate();
             identityMap.put(customer.getId(), null);
 
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
     @Override
-    public void updateCustomer(Customer customer) {
+    public void updateCustomer(Connection conn, Customer customer) throws SQLException {
         String sql = "UPDATE CLIENT SET email = ?, telephone = ?, nom = ?, code_postal = ?, localite = ?, rue = ?, num_rue = ?, pays = ?, est_une_femme = ?, prenom = ?, forme_sociale = ?, type = ? WHERE numero = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, customer.getEmail());
             pstmt.setString(2, customer.getPhone());
@@ -109,20 +102,17 @@ public class CustomerMapperImpl implements CustomerMapper {
             pstmt.executeUpdate();
             identityMap.put(customer.getId(), customer);
 
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
     @Override
-    public Customer findCustomerById(Long id) {
+    public Customer findCustomerById(Connection conn, Long id) throws SQLException {
         if (identityMap.contains(id)) {
             return identityMap.get(id);
         }
 
         String sql = "SELECT * FROM CLIENT WHERE numero = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setLong(1, id);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -132,17 +122,14 @@ public class CustomerMapperImpl implements CustomerMapper {
                     return mapToCustomer(rs);
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return null;
     }
 
     @Override
-    public Customer findCustomerByEmail(String email) {
+    public Customer findCustomerByEmail(Connection conn, String email) throws SQLException {
         String sql = "SELECT * FROM CLIENT WHERE UPPER(email) = UPPER(?)";
-        try (Connection conn = DatabaseManager.getConnection()) {
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, email.toUpperCase());
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
@@ -154,18 +141,15 @@ public class CustomerMapperImpl implements CustomerMapper {
                     return customer;
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return null;
     }
 
     @Override
-    public Set<Customer> findAllCustomers() {
+    public Set<Customer> findAllCustomers(Connection conn) throws SQLException {
         Set<Customer> customers = new HashSet<>();
         String sql = "SELECT * FROM CLIENT";
-        try (Connection conn = DatabaseManager.getConnection();
-             Statement stmt = conn.createStatement();
+        try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
@@ -173,8 +157,6 @@ public class CustomerMapperImpl implements CustomerMapper {
                 customers.add(customer);
                 identityMap.put(customer.getId(), customer);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return customers;
     }

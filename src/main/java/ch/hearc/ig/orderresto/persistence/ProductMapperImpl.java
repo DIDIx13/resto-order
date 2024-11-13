@@ -12,12 +12,11 @@ public class ProductMapperImpl implements ProductMapper {
     private IdentityMap<Product> identityMap = new IdentityMap<>();
 
     @Override
-    public void addProduct(Product product, Long restaurantId) {
+    public void addProduct(Connection conn, Product product, Long restaurantId) throws SQLException {
         String sql = "INSERT INTO PRODUIT (fk_resto, prix_unitaire, nom, description) VALUES (?, ?, ?, ?)";
         String selectIdSql = "SELECT SEQ_PRODUIT.CURRVAL FROM dual";
 
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setLong(1, restaurantId);
             pstmt.setBigDecimal(2, product.getUnitPrice());
@@ -39,31 +38,25 @@ public class ProductMapperImpl implements ProductMapper {
                     throw new SQLException("Échec de la récupération de l'identifiant du produit.");
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
     @Override
-    public void removeProduct(Product product) {
+    public void removeProduct(Connection conn, Product product) throws SQLException {
         String sql = "DELETE FROM PRODUIT WHERE numero = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setLong(1, product.getId());
             pstmt.executeUpdate();
             identityMap.put(product.getId(), null);
 
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
     @Override
-    public void updateProduct(Product product) {
+    public void updateProduct(Connection conn, Product product) throws SQLException {
         String sql = "UPDATE PRODUIT SET prix_unitaire = ?, nom = ?, description = ? WHERE numero = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setBigDecimal(1, product.getUnitPrice());
             pstmt.setString(2, product.getName());
@@ -73,20 +66,17 @@ public class ProductMapperImpl implements ProductMapper {
             pstmt.executeUpdate();
             identityMap.put(product.getId(), product);
 
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
     @Override
-    public Product findProductById(Long id) {
+    public Product findProductById(Connection conn, Long id) throws SQLException {
         if (identityMap.contains(id)) {
             return identityMap.get(id);
         }
 
         String sql = "SELECT * FROM PRODUIT WHERE numero = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setLong(1, id);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -102,22 +92,19 @@ public class ProductMapperImpl implements ProductMapper {
                     return product;
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return null;
     }
 
     @Override
-    public Set<Product> findProductsByRestaurantId(Long restaurantId) {
+    public Set<Product> findProductsByRestaurantId(Connection conn, Long restaurantId) throws SQLException {
         Set<Product> products = new HashSet<>();
         String sql = "SELECT p.*, r.nom AS restaurant_name, r.numero AS restaurant_id " +
                 "FROM PRODUIT p " +
                 "JOIN RESTAURANT r ON p.fk_resto = r.numero " +
                 "WHERE r.numero = ?";
 
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setLong(1, restaurantId);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -140,13 +127,11 @@ public class ProductMapperImpl implements ProductMapper {
                     identityMap.put(product.getId(), product);
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return products;
     }
 
-    public Set<Product> findProductsByOrderId(Long orderId) {
+    public Set<Product> findProductsByOrderId(Connection conn, Long orderId) throws SQLException {
         Set<Product> products = new HashSet<>();
         String sql = "SELECT p.*, r.nom AS restaurant_name, r.numero AS restaurant_id " +
                 "FROM PRODUIT p " +
@@ -154,8 +139,7 @@ public class ProductMapperImpl implements ProductMapper {
                 "JOIN RESTAURANT r ON p.fk_resto = r.numero " +
                 "WHERE pc.fk_commande = ?";
 
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setLong(1, orderId); // Set the order ID
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -179,8 +163,6 @@ public class ProductMapperImpl implements ProductMapper {
                     identityMap.put(product.getId(), product);
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return products;
     }

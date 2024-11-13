@@ -5,18 +5,19 @@ import ch.hearc.ig.orderresto.business.Customer;
 import ch.hearc.ig.orderresto.business.OrganizationCustomer;
 import ch.hearc.ig.orderresto.business.PrivateCustomer;
 import ch.hearc.ig.orderresto.persistence.CustomerMapper;
+import ch.hearc.ig.orderresto.services.CustomerService;
 
 public class CustomerCLI extends AbstractCLI {
-    private CustomerMapper customerMapper;
+    private CustomerService customerService;
 
-    public CustomerCLI(CustomerMapper customerMapper) {
-        this.customerMapper = customerMapper;
+    public CustomerCLI() {
+        this.customerService = new CustomerService();
     }
 
     public Customer getExistingCustomer() {
         this.ln("Quelle est votre adresse email?");
         String email = this.readEmailFromUser();
-        Customer customer = customerMapper.findCustomerByEmail(email);
+        Customer customer = customerService.findCustomerByEmail(email);
         if (customer == null) {
             this.ln("Aucun client trouvé avec cet email.");
         }
@@ -57,7 +58,7 @@ public class CustomerCLI extends AbstractCLI {
             customer = new OrganizationCustomer(null, phone, email, address, name, legalForm);
         }
 
-        customerMapper.addCustomer(customer);
+        customerService.addCustomer(customer);
         this.ln("Client ajouté avec succès.");
         return customer;
     }

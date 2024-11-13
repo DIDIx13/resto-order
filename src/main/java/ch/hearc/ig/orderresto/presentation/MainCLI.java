@@ -3,18 +3,22 @@ package ch.hearc.ig.orderresto.presentation;
 import ch.hearc.ig.orderresto.business.Order;
 // import ch.hearc.ig.orderresto.persistence.FakeDb;
 import ch.hearc.ig.orderresto.persistence.*;
+import ch.hearc.ig.orderresto.services.CustomerService;
+import ch.hearc.ig.orderresto.services.OrderService;
+import ch.hearc.ig.orderresto.services.ProductService;
+import ch.hearc.ig.orderresto.services.RestaurantService;
 
 public class MainCLI extends AbstractCLI {
-    private RestaurantMapper restaurantMapper;
-    private ProductMapper productMapper;
-    private CustomerMapper customerMapper;
-    private OrderMapper orderMapper;
+    private RestaurantService restaurantService;
+    private ProductService productService;
+    private CustomerService customerService;
+    private OrderService orderService;
 
-    public MainCLI(RestaurantMapper restaurantMapper) {
-        this.restaurantMapper = restaurantMapper;
-        this.productMapper = new ProductMapperImpl();
-        this.customerMapper = new CustomerMapperImpl();
-        this.orderMapper = new OrderMapperImpl();
+    public MainCLI() {
+        this.restaurantService = new RestaurantService();
+        this.productService = new ProductService();
+        this.customerService = new CustomerService();
+        this.orderService = new OrderService();
     }
 
     public void run() {
@@ -32,11 +36,11 @@ public class MainCLI extends AbstractCLI {
             this.ln("Good bye!");
             return;
         }
-        OrderCLI orderCLI = new OrderCLI(restaurantMapper, customerMapper, productMapper, orderMapper);
+        OrderCLI orderCLI = new OrderCLI();
         if (userChoice == 1) {
             Order newOrder = orderCLI.createNewOrder();
             if (newOrder != null) {
-                restaurantMapper.addOrder(newOrder);
+                //orderService.addOrder(newOrder);
             }
         } else {
             Order existingOrder = orderCLI.selectOrder();
