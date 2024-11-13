@@ -56,8 +56,6 @@ public class CustomerMapperImpl implements CustomerMapper {
                     throw new SQLException("Échec de la récupération de l'identifiant du client.");
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -70,8 +68,6 @@ public class CustomerMapperImpl implements CustomerMapper {
             pstmt.executeUpdate();
             identityMap.put(customer.getId(), null);
 
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -106,8 +102,6 @@ public class CustomerMapperImpl implements CustomerMapper {
             pstmt.executeUpdate();
             identityMap.put(customer.getId(), customer);
 
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -128,8 +122,6 @@ public class CustomerMapperImpl implements CustomerMapper {
                     return mapToCustomer(rs);
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return null;
     }
@@ -137,8 +129,7 @@ public class CustomerMapperImpl implements CustomerMapper {
     @Override
     public Customer findCustomerByEmail(Connection conn, String email) throws SQLException {
         String sql = "SELECT * FROM CLIENT WHERE UPPER(email) = UPPER(?)";
-        try {
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, email.toUpperCase());
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
@@ -150,8 +141,6 @@ public class CustomerMapperImpl implements CustomerMapper {
                     return customer;
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return null;
     }
@@ -168,8 +157,6 @@ public class CustomerMapperImpl implements CustomerMapper {
                 customers.add(customer);
                 identityMap.put(customer.getId(), customer);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return customers;
     }

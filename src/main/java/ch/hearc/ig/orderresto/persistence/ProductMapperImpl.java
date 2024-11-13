@@ -38,8 +38,6 @@ public class ProductMapperImpl implements ProductMapper {
                     throw new SQLException("Échec de la récupération de l'identifiant du produit.");
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -52,8 +50,6 @@ public class ProductMapperImpl implements ProductMapper {
             pstmt.executeUpdate();
             identityMap.put(product.getId(), null);
 
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -70,8 +66,6 @@ public class ProductMapperImpl implements ProductMapper {
             pstmt.executeUpdate();
             identityMap.put(product.getId(), product);
 
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -98,8 +92,6 @@ public class ProductMapperImpl implements ProductMapper {
                     return product;
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return null;
     }
@@ -135,8 +127,6 @@ public class ProductMapperImpl implements ProductMapper {
                     identityMap.put(product.getId(), product);
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return products;
     }
@@ -173,8 +163,6 @@ public class ProductMapperImpl implements ProductMapper {
                     identityMap.put(product.getId(), product);
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return products;
     }

@@ -66,8 +66,6 @@ public class OrderMapperImpl implements OrderMapper {
             pstmt.executeUpdate();
             identityMap.put(order.getId(), null);
 
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -103,8 +101,6 @@ public class OrderMapperImpl implements OrderMapper {
 
             identityMap.put(order.getId(), order);
 
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -125,8 +121,6 @@ public class OrderMapperImpl implements OrderMapper {
                     return order;
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return null;
     }
@@ -145,8 +139,6 @@ public class OrderMapperImpl implements OrderMapper {
                     identityMap.put(order.getId(), order);
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return orders;  // Returns an empty set if there are no orders, avoiding NullPointerException
     }
@@ -163,8 +155,6 @@ public class OrderMapperImpl implements OrderMapper {
                 orders.add(order);
                 identityMap.put(order.getId(), order);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return orders;
     }

@@ -42,8 +42,6 @@ public class RestaurantMapperImpl implements RestaurantMapper {
                     throw new SQLException("Échec de la récupération de l'identifiant du restaurant.");
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -56,8 +54,6 @@ public class RestaurantMapperImpl implements RestaurantMapper {
             pstmt.executeUpdate();
             identityMap.put(restaurant.getId(), null);
 
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -77,8 +73,6 @@ public class RestaurantMapperImpl implements RestaurantMapper {
             pstmt.executeUpdate();
             identityMap.put(restaurant.getId(), restaurant);
 
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -110,8 +104,6 @@ public class RestaurantMapperImpl implements RestaurantMapper {
                     return restaurant;
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return null;
     }
@@ -139,31 +131,7 @@ public class RestaurantMapperImpl implements RestaurantMapper {
                 restaurants.add(restaurant);
                 identityMap.put(restaurant.getId(), restaurant);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return restaurants;
-    }
-
-    public void addOrder(Connection conn, Order order) throws SQLException {
-        if (order.getId() == null || orderMapper.findOrderById(conn, order.getId()) == null) {
-            orderMapper.addOrder(conn, order);
-        }
-    }
-
-
-    public void addCustomer(Connection conn, Customer customer) throws SQLException {
-        if (customer.getId() == null || customerMapper.findCustomerById(conn, customer.getId()) == null) {
-            customerMapper.addCustomer(conn, customer);
-        }
-    }
-
-
-    public Customer findCustomerByEmail(Connection conn, String email) throws SQLException {
-        return customerMapper.findCustomerByEmail(conn, email);
-    }
-
-    public Set<Product> findProductsByRestaurantId(Connection conn, Long restaurantId) throws SQLException {
-        return productMapper.findProductsByRestaurantId(conn, restaurantId);
     }
 }
